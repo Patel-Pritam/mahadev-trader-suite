@@ -14,7 +14,164 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      customers: {
+        Row: {
+          created_at: string
+          id: string
+          mobile_number: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mobile_number: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mobile_number?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      invoice_items: {
+        Row: {
+          created_at: string
+          id: string
+          invoice_id: string
+          item_name: string
+          price: number
+          quantity: number
+          stock_item_id: string | null
+          subtotal: number
+          unit_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invoice_id: string
+          item_name: string
+          price: number
+          quantity: number
+          stock_item_id?: string | null
+          subtotal: number
+          unit_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          item_name?: string
+          price?: number
+          quantity?: number
+          stock_item_id?: string | null
+          subtotal?: number
+          unit_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_stock_item_id_fkey"
+            columns: ["stock_item_id"]
+            isOneToOne: false
+            referencedRelation: "stock_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          customer_mobile: string
+          customer_name: string
+          id: string
+          invoice_date: string
+          payment_type: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          customer_mobile: string
+          customer_name: string
+          id?: string
+          invoice_date?: string
+          payment_type: string
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          customer_mobile?: string
+          customer_name?: string
+          id?: string
+          invoice_date?: string
+          payment_type?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_items: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          price: number
+          quantity: number
+          unit_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          price: number
+          quantity?: number
+          unit_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          price?: number
+          quantity?: number
+          unit_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

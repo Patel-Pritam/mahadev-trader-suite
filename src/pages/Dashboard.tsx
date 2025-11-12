@@ -82,7 +82,10 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card 
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => navigate("/stock")}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Stock</CardTitle>
               <Package className="h-5 w-5 text-primary" />
@@ -95,7 +98,10 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card 
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => navigate("/invoices")}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Invoices</CardTitle>
               <FileText className="h-5 w-5 text-primary" />
@@ -108,7 +114,10 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card 
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => navigate("/customers")}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Customers</CardTitle>
               <Users className="h-5 w-5 text-primary" />
@@ -121,7 +130,10 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card 
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => navigate("/reports")}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Reports</CardTitle>
               <TrendingUp className="h-5 w-5 text-primary" />
