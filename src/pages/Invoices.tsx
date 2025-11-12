@@ -76,7 +76,7 @@ const Invoices = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Invoice List</CardTitle>
-            <Button onClick={() => toast({ title: "Coming soon", description: "Invoice creation will be added next" })}>
+            <Button onClick={() => navigate("/create-invoice")}>
               <Plus className="mr-2 h-4 w-4" />
               Create Invoice
             </Button>
