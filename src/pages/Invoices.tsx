@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Store, ArrowLeft, Plus, FileText } from "lucide-react";
+import { Store, ArrowLeft, Plus, FileText, Download, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface Invoice {
   id: string;
@@ -17,11 +20,22 @@ interface Invoice {
   invoice_date: string;
 }
 
+interface InvoiceItem {
+  id: string;
+  item_name: string;
+  quantity: number;
+  price: number;
+  subtotal: number;
+  unit_type: string;
+}
+
 const Invoices = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [invoiceToDelete, setInvoiceToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuthAndFetchInvoices();
@@ -53,6 +67,97 @@ const Invoices = () => {
       setInvoices(data || []);
     }
     setLoading(false);
+  };
+
+  const handleDelete = async () => {
+    if (!invoiceToDelete) return;
+
+    const { error: itemsError } = await supabase
+      .from("invoice_items")
+      .delete()
+      .eq("invoice_id", invoiceToDelete);
+
+    if (itemsError) {
+      toast({
+        title: "Error",
+        description: "Failed to delete invoice items",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from("invoices")
+      .delete()
+      .eq("id", invoiceToDelete);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete invoice",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Invoice deleted successfully"
+      });
+      fetchInvoices();
+    }
+    
+    setDeleteDialogOpen(false);
+    setInvoiceToDelete(null);
+  };
+
+  const handleDownloadPDF = async (invoice: Invoice) => {
+    const { data: items, error } = await supabase
+      .from("invoice_items")
+      .select("*")
+      .eq("invoice_id", invoice.id);
+
+    if (error || !items) {
+      toast({
+        title: "Error",
+        description: "Failed to load invoice items",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const doc = new jsPDF();
+    
+    doc.setFontSize(20);
+    doc.text("INVOICE", 105, 20, { align: "center" });
+    
+    doc.setFontSize(10);
+    doc.text(`Date: ${new Date(invoice.invoice_date).toLocaleDateString()}`, 20, 35);
+    doc.text(`Invoice ID: ${invoice.id.substring(0, 8).toUpperCase()}`, 20, 42);
+    
+    doc.text(`Customer: ${invoice.customer_name}`, 20, 55);
+    doc.text(`Mobile: ${invoice.customer_mobile}`, 20, 62);
+    doc.text(`Payment: ${invoice.payment_type}`, 20, 69);
+
+    autoTable(doc, {
+      startY: 80,
+      head: [['Item', 'Quantity', 'Unit', 'Price', 'Subtotal']],
+      body: items.map((item: InvoiceItem) => [
+        item.item_name,
+        item.quantity,
+        item.unit_type,
+        `₹${item.price.toFixed(2)}`,
+        `₹${item.subtotal.toFixed(2)}`
+      ]),
+      foot: [['', '', '', 'Total:', `₹${invoice.total_amount.toFixed(2)}`]],
+      theme: 'striped',
+      headStyles: { fillColor: [59, 130, 246] }
+    });
+
+    doc.save(`invoice-${invoice.id.substring(0, 8)}.pdf`);
+    
+    toast({
+      title: "Success",
+      description: "Invoice PDF downloaded"
+    });
   };
 
   return (
@@ -98,6 +203,7 @@ const Invoices = () => {
                     <TableHead>Mobile</TableHead>
                     <TableHead>Payment</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -116,6 +222,37 @@ const Invoices = () => {
                         </span>
                       </TableCell>
                       <TableCell className="text-right">₹{invoice.total_amount.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => navigate(`/edit-invoice/${invoice.id}`)}
+                            title="Edit"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDownloadPDF(invoice)}
+                            title="Download PDF"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setInvoiceToDelete(invoice.id);
+                              setDeleteDialogOpen(true);
+                            }}
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -124,6 +261,23 @@ const Invoices = () => {
           </CardContent>
         </Card>
       </main>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Invoice</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this invoice? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
