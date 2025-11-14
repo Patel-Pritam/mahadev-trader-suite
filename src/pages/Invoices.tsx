@@ -8,6 +8,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Store, ArrowLeft, Plus, FileText, Download, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -36,6 +38,9 @@ const Invoices = () => {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState<string | null>(null);
+  const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [selectedInvoiceItems, setSelectedInvoiceItems] = useState<InvoiceItem[]>([]);
 
   useEffect(() => {
     checkAuthAndFetchInvoices();
@@ -109,6 +114,26 @@ const Invoices = () => {
     setInvoiceToDelete(null);
   };
 
+  const handleShowSummary = async (invoice: Invoice) => {
+    const { data: items, error } = await supabase
+      .from("invoice_items")
+      .select("*")
+      .eq("invoice_id", invoice.id);
+
+    if (error || !items) {
+      toast({
+        title: "Error",
+        description: "Failed to load invoice items",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSelectedInvoice(invoice);
+    setSelectedInvoiceItems(items);
+    setSummaryDialogOpen(true);
+  };
+
   const handleDownloadPDF = async (invoice: Invoice) => {
     const { data: items, error } = await supabase
       .from("invoice_items")
@@ -144,10 +169,10 @@ const Invoices = () => {
         item.item_name,
         item.quantity,
         item.unit_type,
-        `₹${item.price.toFixed(2)}`,
-        `₹${item.subtotal.toFixed(2)}`
+        `Rs. ${item.price.toFixed(2)}`,
+        `Rs. ${item.subtotal.toFixed(2)}`
       ]),
-      foot: [['', '', '', 'Total:', `₹${invoice.total_amount.toFixed(2)}`]],
+      foot: [['', '', '', 'Total:', `Rs. ${invoice.total_amount.toFixed(2)}`]],
       theme: 'striped',
       headStyles: { fillColor: [59, 130, 246] }
     });
@@ -210,7 +235,12 @@ const Invoices = () => {
                   {invoices.map((invoice) => (
                     <TableRow key={invoice.id}>
                       <TableCell>{new Date(invoice.invoice_date).toLocaleDateString()}</TableCell>
-                      <TableCell className="font-medium">{invoice.customer_name}</TableCell>
+                      <TableCell 
+                        className="font-medium text-primary cursor-pointer hover:underline"
+                        onClick={() => handleShowSummary(invoice)}
+                      >
+                        {invoice.customer_name}
+                      </TableCell>
                       <TableCell>{invoice.customer_mobile}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs ${
@@ -278,6 +308,83 @@ const Invoices = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Invoice Summary</DialogTitle>
+          </DialogHeader>
+          {selectedInvoice && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Invoice Date</p>
+                  <p className="font-medium">{new Date(selectedInvoice.invoice_date).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Invoice ID</p>
+                  <p className="font-medium">{selectedInvoice.id.substring(0, 8).toUpperCase()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Customer Name</p>
+                  <p className="font-medium">{selectedInvoice.customer_name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Mobile Number</p>
+                  <p className="font-medium">{selectedInvoice.customer_mobile}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Payment Type</p>
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs ${
+                    selectedInvoice.payment_type === 'Pending' 
+                      ? 'bg-destructive/10 text-destructive' 
+                      : 'bg-accent/10 text-accent'
+                  }`}>
+                    {selectedInvoice.payment_type}
+                  </span>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h3 className="font-semibold mb-4">Items</h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item Name</TableHead>
+                      <TableHead className="text-right">Quantity</TableHead>
+                      <TableHead>Unit</TableHead>
+                      <TableHead className="text-right">Price</TableHead>
+                      <TableHead className="text-right">Subtotal</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedInvoiceItems.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.item_name}</TableCell>
+                        <TableCell className="text-right">{item.quantity}</TableCell>
+                        <TableCell>{item.unit_type}</TableCell>
+                        <TableCell className="text-right">₹{item.price.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">₹{item.subtotal.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <Separator />
+
+              <div className="flex justify-end">
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground mb-1">Total Amount</p>
+                  <p className="text-2xl font-bold">₹{selectedInvoice.total_amount.toFixed(2)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
