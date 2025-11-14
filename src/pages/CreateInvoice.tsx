@@ -11,6 +11,17 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Store, ArrowLeft, Plus, Trash2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { z } from "zod";
+
+const newCustomerSchema = z.object({
+  name: z.string().trim().min(1, "Customer name is required").max(100, "Name must be less than 100 characters"),
+  mobile: z.string().trim().regex(/^[6-9]\d{9}$/, "Please enter a valid 10-digit mobile number starting with 6-9")
+});
+
+const invoiceItemSchema = z.object({
+  quantity: z.number().positive("Quantity must be positive"),
+  price: z.number().positive("Price must be positive").max(999999.99, "Price must be less than 1,000,000")
+});
 
 interface StockItem {
   id: string;
@@ -111,6 +122,16 @@ const CreateInvoice = () => {
 
   const updateItemQuantity = (index: number, quantity: number) => {
     const newItems = [...invoiceItems];
+    
+    if (quantity <= 0) {
+      toast({
+        title: "Validation Error",
+        description: "Quantity must be positive",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (quantity > newItems[index].available_quantity) {
       toast({
         title: "Insufficient stock",
@@ -125,6 +146,25 @@ const CreateInvoice = () => {
 
   const updateItemPrice = (index: number, price: number) => {
     const newItems = [...invoiceItems];
+    
+    if (price <= 0) {
+      toast({
+        title: "Validation Error",
+        description: "Price must be positive",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (price > 999999.99) {
+      toast({
+        title: "Validation Error",
+        description: "Price must be less than 1,000,000",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     newItems[index].price = price;
     setInvoiceItems(newItems);
   };
@@ -147,15 +187,6 @@ const CreateInvoice = () => {
       return;
     }
 
-    if (newCustomerMode && (!newCustomerName || !newCustomerMobile)) {
-      toast({
-        title: "Customer details required",
-        description: "Please enter customer name and mobile number",
-        variant: "destructive"
-      });
-      return;
-    }
-
     if (invoiceItems.length === 0) {
       toast({
         title: "No items",
@@ -165,23 +196,84 @@ const CreateInvoice = () => {
       return;
     }
 
+    // Validate all invoice items
+    for (const item of invoiceItems) {
+      try {
+        invoiceItemSchema.parse({
+          quantity: item.quantity,
+          price: item.price
+        });
+        
+        if (item.quantity > item.available_quantity) {
+          toast({
+            title: "Validation Error",
+            description: `${item.item_name}: Cannot exceed available stock (${item.available_quantity} ${item.unit_type})`,
+            variant: "destructive"
+          });
+          return;
+        }
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          toast({
+            title: "Validation Error",
+            description: `${item.item_name}: ${error.errors[0].message}`,
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+    }
+
+    let customerName = "";
+    let customerMobile = "";
+    let customerId: string | undefined = undefined;
+
+    // Validate customer data
+    if (newCustomerMode) {
+      try {
+        const validatedCustomer = newCustomerSchema.parse({
+          name: newCustomerName,
+          mobile: newCustomerMobile
+        });
+        customerName = validatedCustomer.name;
+        customerMobile = validatedCustomer.mobile;
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          toast({
+            title: "Validation Error",
+            description: error.errors[0].message,
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+    } else {
+      if (!selectedCustomer) {
+        toast({
+          title: "Error",
+          description: "Please select a customer",
+          variant: "destructive"
+        });
+        return;
+      }
+      customerName = selectedCustomer.name;
+      customerMobile = selectedCustomer.mobile_number;
+      customerId = selectedCustomer.id;
+    }
+
     setSaving(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      let customerId = selectedCustomer?.id;
-      let customerName = selectedCustomer?.name || newCustomerName;
-      let customerMobile = selectedCustomer?.mobile_number || newCustomerMobile;
-
       // Create new customer if needed
       if (newCustomerMode) {
         const { data: newCustomer, error: customerError } = await supabase
           .from("customers")
           .insert([{
-            name: newCustomerName,
-            mobile_number: newCustomerMobile,
+            name: customerName,
+            mobile_number: customerMobile,
             user_id: user.id
           }])
           .select()

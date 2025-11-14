@@ -10,6 +10,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Store, ArrowLeft, Plus, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+
+const customerSchema = z.object({
+  name: z.string().trim().min(1, "Customer name is required").max(100, "Name must be less than 100 characters"),
+  mobile_number: z.string().trim().regex(/^[6-9]\d{9}$/, "Please enter a valid 10-digit mobile number starting with 6-9")
+});
 
 interface Customer {
   id: string;
@@ -68,25 +74,40 @@ const Customers = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase
-      .from("customers")
-      .insert([{
+    try {
+      const validatedData = customerSchema.parse({
         name: formData.name,
         mobile_number: formData.mobile_number,
-        user_id: user.id
-      }]);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add customer",
-        variant: "destructive"
       });
-    } else {
-      toast({ title: "Success", description: "Customer added successfully" });
-      fetchCustomers();
-      setFormData({ name: "", mobile_number: "" });
-      setOpen(false);
+
+      const { error } = await supabase
+        .from("customers")
+        .insert([{
+          name: validatedData.name,
+          mobile_number: validatedData.mobile_number,
+          user_id: user.id
+        }]);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to add customer",
+          variant: "destructive"
+        });
+      } else {
+        toast({ title: "Success", description: "Customer added successfully" });
+        fetchCustomers();
+        setFormData({ name: "", mobile_number: "" });
+        setOpen(false);
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive"
+        });
+      }
     }
   };
 
