@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Stock from "./pages/Stock";
 import Invoices from "./pages/Invoices";
 import CreateInvoice from "./pages/CreateInvoice";
+import EditInvoice from "./pages/EditInvoice";
 import Customers from "./pages/Customers";
 import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/stock" element={<Stock />} />
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/create-invoice" element={<CreateInvoice />} />
+          <Route path="/edit-invoice/:id" element={<EditInvoice />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/reports" element={<Reports />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
