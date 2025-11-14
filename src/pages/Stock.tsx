@@ -11,6 +11,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Store, ArrowLeft, Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+
+const stockItemSchema = z.object({
+  name: z.string().trim().min(1, "Item name is required").max(100, "Item name must be less than 100 characters"),
+  price: z.number().positive("Price must be positive").max(999999.99, "Price must be less than 1,000,000"),
+  quantity: z.number().nonnegative("Quantity cannot be negative").max(999999.99, "Quantity must be less than 1,000,000"),
+  unit_type: z.enum(["Kg", "Qty"], { errorMap: () => ({ message: "Please select a valid unit type" }) })
+});
 
 interface StockItem {
   id: string;
@@ -72,46 +80,63 @@ const Stock = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const itemData = {
-      name: formData.name,
-      price: parseFloat(formData.price),
-      quantity: parseFloat(formData.quantity),
-      unit_type: formData.unit_type,
-      user_id: user.id
-    };
+    try {
+      const validatedData = stockItemSchema.parse({
+        name: formData.name,
+        price: parseFloat(formData.price),
+        quantity: parseFloat(formData.quantity),
+        unit_type: formData.unit_type,
+      });
 
-    if (editingItem) {
-      const { error } = await supabase
-        .from("stock_items")
-        .update(itemData)
-        .eq("id", editingItem.id);
+      const itemData = {
+        name: validatedData.name,
+        price: validatedData.price,
+        quantity: validatedData.quantity,
+        unit_type: validatedData.unit_type,
+        user_id: user.id,
+      };
 
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update item",
-          variant: "destructive"
-        });
+      if (editingItem) {
+        const { error } = await supabase
+          .from("stock_items")
+          .update(itemData)
+          .eq("id", editingItem.id);
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: "Failed to update item",
+            variant: "destructive"
+          });
+        } else {
+          toast({ title: "Success", description: "Item updated successfully" });
+          fetchItems();
+          resetForm();
+        }
       } else {
-        toast({ title: "Success", description: "Item updated successfully" });
-        fetchItems();
-        resetForm();
+        const { error } = await supabase
+          .from("stock_items")
+          .insert([itemData]);
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: "Failed to add item",
+            variant: "destructive"
+          });
+        } else {
+          toast({ title: "Success", description: "Item added successfully" });
+          fetchItems();
+          resetForm();
+        }
       }
-    } else {
-      const { error } = await supabase
-        .from("stock_items")
-        .insert([itemData]);
-
-      if (error) {
+    } catch (error) {
+      if (error instanceof z.ZodError) {
         toast({
-          title: "Error",
-          description: "Failed to add item",
+          title: "Validation Error",
+          description: error.errors[0].message,
           variant: "destructive"
         });
-      } else {
-        toast({ title: "Success", description: "Item added successfully" });
-        fetchItems();
-        resetForm();
       }
     }
   };
