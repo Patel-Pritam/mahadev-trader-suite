@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { TopNav } from "@/components/TopNav";
 import { Store, ArrowLeft, TrendingUp, DollarSign, FileText, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -75,6 +76,7 @@ const Reports = () => {
           <ThemeToggle />
         </div>
       </header>
+      <TopNav />
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
