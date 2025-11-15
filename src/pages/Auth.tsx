@@ -128,27 +128,39 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="absolute top-4 right-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/5 to-secondary/5 p-4">
+      <div className="absolute top-4 right-4 z-10">
         <ThemeToggle />
       </div>
       
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-2">
+      <Card className="w-full max-w-md shadow-elegant backdrop-blur-sm border-2 border-primary/20 animate-scale-in">
+        <CardHeader className="text-center space-y-3">
           <div className="flex justify-center mb-2">
-            <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center">
-              <Store className="w-8 h-8 text-primary-foreground" />
+            <div className="w-20 h-20 rounded-3xl gradient-primary flex items-center justify-center shadow-glow animate-glow">
+              <Store className="w-10 h-10 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold">Mahadev Traders</CardTitle>
-          <CardDescription>Business Management System</CardDescription>
+          <CardTitle className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            Mahadev Traders
+          </CardTitle>
+          <CardDescription className="text-base">Modern Business Management</CardDescription>
         </CardHeader>
 
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 p-1 bg-muted/50">
+              <TabsTrigger 
+                value="login"
+                className="data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground"
+              >
+                Login
+              </TabsTrigger>
+              <TabsTrigger 
+                value="signup"
+                className="data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground"
+              >
+                Sign Up
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -175,7 +187,11 @@ const Auth = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  className="w-full gradient-primary text-primary-foreground hover:shadow-elegant transition-all duration-300 hover:scale-[1.02]" 
+                  disabled={loading}
+                >
                   {loading ? "Logging in..." : "Login"}
                 </Button>
               </form>
@@ -216,7 +232,19 @@ const Auth = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1 font-medium">Password Requirements:</p>
+                  <ul className="text-xs text-muted-foreground space-y-0.5 list-disc list-inside">
+                    <li>At least 8 characters long</li>
+                    <li>One uppercase & one lowercase letter</li>
+                    <li>One number & one special character</li>
+                  </ul>
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full gradient-primary text-primary-foreground hover:shadow-elegant transition-all duration-300 hover:scale-[1.02]" 
+                  disabled={loading}
+                >
                   {loading ? "Creating account..." : "Create Account"}
                 </Button>
               </form>
@@ -224,8 +252,10 @@ const Auth = () => {
           </Tabs>
         </CardContent>
 
-        <CardFooter className="text-center text-sm text-muted-foreground">
-          Secure business management for small businesses
+        <CardFooter className="text-center">
+          <p className="text-sm text-muted-foreground">
+            🔒 Secure business management for small businesses
+          </p>
         </CardFooter>
       </Card>
     </div>
