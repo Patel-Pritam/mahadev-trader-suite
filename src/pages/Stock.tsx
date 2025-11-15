@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,8 +33,6 @@ interface StockItem {
 const Stock = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [items, setItems] = useState<StockItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const [formData, setFormData] = useState({
@@ -43,36 +42,55 @@ const Stock = () => {
     unit_type: "Qty"
   });
 
+  const { data: items = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ['stock-items'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase
+        .from('stock_items')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as StockItem[];
+    },
+    staleTime: 30000,
+    gcTime: 300000,
+  });
+
+  // Realtime subscription
   useEffect(() => {
-    checkAuthAndFetchItems();
+    const channel = supabase
+      .channel('stock-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'stock_items'
+        },
+        () => {
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
+
+  useEffect(() => {
+    checkAuth();
   }, []);
 
-  const checkAuthAndFetchItems = async () => {
+  const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
-      return;
     }
-    fetchItems();
-  };
-
-  const fetchItems = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("stock_items")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch stock items",
-        variant: "destructive"
-      });
-    } else {
-      setItems(data || []);
-    }
-    setLoading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -111,7 +129,7 @@ const Stock = () => {
           });
         } else {
           toast({ title: "Success", description: "Item updated successfully" });
-          fetchItems();
+          refetch();
           resetForm();
         }
       } else {
@@ -127,7 +145,7 @@ const Stock = () => {
           });
         } else {
           toast({ title: "Success", description: "Item added successfully" });
-          fetchItems();
+          refetch();
           resetForm();
         }
       }
@@ -156,7 +174,7 @@ const Stock = () => {
       });
     } else {
       toast({ title: "Success", description: "Item deleted successfully" });
-      fetchItems();
+      refetch();
     }
   };
 

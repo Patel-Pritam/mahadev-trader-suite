@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -16,35 +17,49 @@ const Reports = () => {
     pendingPayments: 0,
     invoiceCount: 0
   });
-  const [loading, setLoading] = useState(true);
 
+  const { data: invoices, isLoading: loading, refetch } = useQuery({
+    queryKey: ['invoices-report'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('total_amount, payment_type');
+
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 30000,
+    gcTime: 300000,
+  });
+
+  // Realtime subscription
   useEffect(() => {
-    checkAuthAndFetchStats();
-  }, []);
+    const channel = supabase
+      .channel('invoice-report-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'invoices'
+        },
+        () => {
+          refetch();
+        }
+      )
+      .subscribe();
 
-  const checkAuthAndFetchStats = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-      return;
-    }
-    fetchStats();
-  };
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
 
-  const fetchStats = async () => {
-    setLoading(true);
-    
-    const { data: invoices, error } = await supabase
-      .from("invoices")
-      .select("total_amount, payment_type");
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch report data",
-        variant: "destructive"
-      });
-    } else if (invoices) {
+  // Calculate stats when data changes
+  useEffect(() => {
+    if (invoices) {
       const totalSales = invoices.reduce((sum, inv) => sum + Number(inv.total_amount), 0);
       const pendingPayments = invoices
         .filter(inv => inv.payment_type === 'Pending')
@@ -56,8 +71,17 @@ const Reports = () => {
         invoiceCount: invoices.length
       });
     }
-    
-    setLoading(false);
+  }, [invoices]);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth");
+    }
   };
 
   return (
