@@ -177,7 +177,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      decrement_stock: {
+        Args: { _quantity: number; _stock_item_id: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
