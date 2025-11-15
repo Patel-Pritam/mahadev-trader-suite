@@ -246,20 +246,20 @@ const Invoices = () => {
     doc.text(invoice.customer_name, 120, 70);
     doc.setFont(undefined, 'normal');
     doc.setFontSize(10);
-    doc.text(`📱 ${invoice.customer_mobile}`, 120, 78);
+    doc.text(`Mobile: ${invoice.customer_mobile}`, 120, 78);
     
     // Items table with modern styling
     autoTable(doc, {
       startY: 100,
-      head: [['Item Name', 'Qty', 'Unit', 'Price (₹)', 'Amount (₹)']],
+      head: [['Item Name', 'Qty', 'Unit', 'Price (Rs.)', 'Amount (Rs.)']],
       body: items.map((item: InvoiceItem) => [
         item.item_name,
         item.quantity.toString(),
         item.unit_type,
-        item.price.toFixed(2),
-        item.subtotal.toFixed(2)
+        'Rs. ' + item.price.toFixed(2),
+        'Rs. ' + item.subtotal.toFixed(2)
       ]),
-      foot: [['', '', '', 'Total Amount:', invoice.total_amount.toFixed(2)]],
+      foot: [['', '', '', 'Total Amount:', 'Rs. ' + invoice.total_amount.toFixed(2)]],
       theme: 'grid',
       headStyles: {
         fillColor: [155, 81, 224],
