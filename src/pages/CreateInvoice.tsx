@@ -316,13 +316,11 @@ const CreateInvoice = () => {
 
         if (itemError) throw itemError;
 
-        // Update stock quantity
-        const { error: stockError } = await supabase
-          .from("stock_items")
-          .update({ 
-            quantity: item.available_quantity - item.quantity 
-          })
-          .eq("id", item.stock_item_id);
+        // Update stock quantity atomically to prevent race conditions
+        const { error: stockError } = await supabase.rpc('decrement_stock', {
+          _stock_item_id: item.stock_item_id,
+          _quantity: item.quantity
+        });
 
         if (stockError) throw stockError;
       }
