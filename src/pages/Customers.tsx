@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,8 +29,6 @@ interface Customer {
 const Customers = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
@@ -37,36 +36,55 @@ const Customers = () => {
     mobile_number: ""
   });
 
+  const { data: customers = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ['customers'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as Customer[];
+    },
+    staleTime: 30000,
+    gcTime: 300000,
+  });
+
+  // Realtime subscription
   useEffect(() => {
-    checkAuthAndFetchCustomers();
+    const channel = supabase
+      .channel('customer-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'customers'
+        },
+        () => {
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
+
+  useEffect(() => {
+    checkAuth();
   }, []);
 
-  const checkAuthAndFetchCustomers = async () => {
+  const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
-      return;
     }
-    fetchCustomers();
-  };
-
-  const fetchCustomers = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("customers")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch customers",
-        variant: "destructive"
-      });
-    } else {
-      setCustomers(data || []);
-    }
-    setLoading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,7 +115,7 @@ const Customers = () => {
         });
       } else {
         toast({ title: "Success", description: "Customer added successfully" });
-        fetchCustomers();
+        refetch();
         setFormData({ name: "", mobile_number: "" });
         setOpen(false);
       }

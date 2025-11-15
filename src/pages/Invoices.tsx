@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -35,44 +36,61 @@ interface InvoiceItem {
 const Invoices = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState<string | null>(null);
   const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [selectedInvoiceItems, setSelectedInvoiceItems] = useState<InvoiceItem[]>([]);
 
+  const { data: invoices = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ['invoices'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .order('invoice_date', { ascending: false });
+
+      if (error) throw error;
+      return data as Invoice[];
+    },
+    staleTime: 30000,
+    gcTime: 300000,
+  });
+
+  // Realtime subscription
   useEffect(() => {
-    checkAuthAndFetchInvoices();
+    const channel = supabase
+      .channel('invoice-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'invoices'
+        },
+        () => {
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
+
+  useEffect(() => {
+    checkAuth();
   }, []);
 
-  const checkAuthAndFetchInvoices = async () => {
+  const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
-      return;
     }
-    fetchInvoices();
-  };
-
-  const fetchInvoices = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("invoices")
-      .select("*")
-      .order("invoice_date", { ascending: false });
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch invoices",
-        variant: "destructive"
-      });
-    } else {
-      setInvoices(data || []);
-    }
-    setLoading(false);
   };
 
   const handleDelete = async () => {
@@ -108,7 +126,7 @@ const Invoices = () => {
         title: "Success",
         description: "Invoice deleted successfully"
       });
-      fetchInvoices();
+      refetch();
     }
     
     setDeleteDialogOpen(false);
