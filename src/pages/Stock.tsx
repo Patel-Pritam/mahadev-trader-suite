@@ -196,17 +196,27 @@ const Stock = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <header className="border-b border-border/40 bg-card/80 backdrop-blur-xl shadow-card sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+          <div className="flex items-center gap-3 animate-fade-in">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate("/dashboard")}
+              className="hover:bg-primary/10"
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-              <Store className="w-6 h-6 text-primary-foreground" />
+            <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center shadow-elegant">
+              <Store className="w-7 h-7 text-primary-foreground" />
             </div>
-            <h1 className="text-xl font-bold">Stock Management</h1>
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Stock Management
+              </h1>
+              <p className="text-xs text-muted-foreground">Manage inventory items</p>
+            </div>
           </div>
           <ThemeToggle />
         </div>
@@ -214,32 +224,47 @@ const Stock = () => {
       <TopNav />
 
       <main className="container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Stock Items</CardTitle>
+        <Card className="shadow-card border-2 border-primary/10 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
+            <div>
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
+                Stock Items
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                {items.length} items in inventory
+              </p>
+            </div>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button onClick={() => { resetForm(); setOpen(true); }}>
-                  <Plus className="mr-2 h-4 w-4" />
+                <Button 
+                  onClick={() => { resetForm(); setOpen(true); }}
+                  variant="gradient"
+                  size="lg"
+                  className="shadow-elegant"
+                >
+                  <Plus className="mr-2 h-5 w-5" />
                   Add Item
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="border-2 border-primary/20 shadow-elegant">
                 <DialogHeader>
-                  <DialogTitle>{editingItem ? "Edit Item" : "Add New Item"}</DialogTitle>
+                  <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                    {editingItem ? "Edit Item" : "Add New Item"}
+                  </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Item Name</Label>
+                    <Label htmlFor="name" className="font-semibold">Item Name</Label>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
+                      className="border-2 focus:border-primary/50"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="price">Price</Label>
+                    <Label htmlFor="price" className="font-semibold">Price (₹)</Label>
                     <Input
                       id="price"
                       type="number"
@@ -247,10 +272,11 @@ const Stock = () => {
                       value={formData.price}
                       onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                       required
+                      className="border-2 focus:border-primary/50"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="quantity">Quantity</Label>
+                    <Label htmlFor="quantity" className="font-semibold">Quantity</Label>
                     <Input
                       id="quantity"
                       type="number"
@@ -258,21 +284,22 @@ const Stock = () => {
                       value={formData.quantity}
                       onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                       required
+                      className="border-2 focus:border-primary/50"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="unit_type">Unit Type</Label>
+                    <Label htmlFor="unit_type" className="font-semibold">Unit Type</Label>
                     <Select value={formData.unit_type} onValueChange={(value) => setFormData({ ...formData, unit_type: value })}>
-                      <SelectTrigger>
+                      <SelectTrigger className="border-2">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Kg">Kg</SelectItem>
-                        <SelectItem value="Qty">Qty</SelectItem>
+                        <SelectItem value="Kg">Kg (Kilogram)</SelectItem>
+                        <SelectItem value="Qty">Qty (Quantity)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" variant="gradient" className="w-full" size="lg">
                     {editingItem ? "Update" : "Add"} Item
                   </Button>
                 </form>
@@ -281,39 +308,78 @@ const Stock = () => {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <p className="text-center text-muted-foreground py-8">Loading...</p>
+              <div className="text-center py-12">
+                <div className="inline-block w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
+                <p className="text-muted-foreground mt-4">Loading inventory...</p>
+              </div>
             ) : items.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No items yet. Add your first stock item!</p>
+              <div className="text-center py-16">
+                <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Store className="w-10 h-10 text-primary" />
+                </div>
+                <p className="text-lg font-semibold mb-2">No stock items yet</p>
+                <p className="text-muted-foreground mb-6">Get started by adding your first inventory item</p>
+                <Button onClick={() => { resetForm(); setOpen(true); }} variant="gradient">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Your First Item
+                </Button>
+              </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Unit</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell>₹{item.price.toFixed(2)}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
-                      <TableCell>{item.unit_type}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(item)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
+              <div className="rounded-xl border-2 border-border/50 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/50">
+                      <TableHead className="font-bold">Name</TableHead>
+                      <TableHead className="font-bold">Price</TableHead>
+                      <TableHead className="font-bold">Quantity</TableHead>
+                      <TableHead className="font-bold">Unit</TableHead>
+                      <TableHead className="text-right font-bold">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {items.map((item, index) => (
+                      <TableRow 
+                        key={item.id} 
+                        className="hover:bg-primary/5 transition-colors animate-fade-in"
+                        style={{ animationDelay: `${index * 0.05}s` }}
+                      >
+                        <TableCell className="font-medium">{item.name}</TableCell>
+                        <TableCell className="text-success font-semibold">₹{item.price.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <span className={`font-semibold ${item.quantity < 10 ? 'text-destructive' : 'text-foreground'}`}>
+                            {item.quantity}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                            {item.unit_type}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => openEditDialog(item)}
+                              className="hover:bg-primary/10 hover:text-primary"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleDelete(item.id)}
+                              className="hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>

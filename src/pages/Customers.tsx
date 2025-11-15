@@ -136,17 +136,27 @@ const Customers = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+      <header className="border-b border-border/40 bg-card/80 backdrop-blur-xl shadow-card sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+          <div className="flex items-center gap-3 animate-fade-in">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate("/dashboard")}
+              className="hover:bg-accent/10"
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-              <Store className="w-6 h-6 text-primary-foreground" />
+            <div className="w-12 h-12 rounded-2xl gradient-accent flex items-center justify-center shadow-elegant">
+              <Store className="w-7 h-7 text-accent-foreground" />
             </div>
-            <h1 className="text-xl font-bold">Customers</h1>
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
+                Customers
+              </h1>
+              <p className="text-xs text-muted-foreground">Manage customer directory</p>
+            </div>
           </div>
           <ThemeToggle />
         </div>
@@ -154,41 +164,53 @@ const Customers = () => {
       <TopNav />
 
       <main className="container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Customer List</CardTitle>
+        <Card className="shadow-card border-2 border-accent/10 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
+            <div>
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
+                Customer Directory
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                {customers.length} registered customers
+              </p>
+            </div>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
+                <Button variant="gradient" size="lg" className="shadow-elegant">
+                  <Plus className="mr-2 h-5 w-5" />
                   Add Customer
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="border-2 border-accent/20 shadow-elegant">
                 <DialogHeader>
-                  <DialogTitle>Add New Customer</DialogTitle>
+                  <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
+                    Add New Customer
+                  </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Customer Name</Label>
+                    <Label htmlFor="name" className="font-semibold">Customer Name</Label>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
+                      className="border-2 focus:border-accent/50"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="mobile">Mobile Number</Label>
+                    <Label htmlFor="mobile" className="font-semibold">Mobile Number</Label>
                     <Input
                       id="mobile"
                       type="tel"
+                      placeholder="10-digit mobile number"
                       value={formData.mobile_number}
                       onChange={(e) => setFormData({ ...formData, mobile_number: e.target.value })}
                       required
+                      className="border-2 focus:border-accent/50"
                     />
                   </div>
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" variant="gradient" className="w-full" size="lg">
                     Add Customer
                   </Button>
                 </form>
@@ -196,43 +218,72 @@ const Customers = () => {
             </Dialog>
           </CardHeader>
           <CardContent>
-            <div className="mb-4">
+            <div className="mb-6">
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-4 top-4 h-5 w-5 text-muted-foreground" />
                 <Input
                   placeholder="Search by name or mobile..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-12 h-12 border-2 focus:border-accent/50"
                 />
               </div>
             </div>
             
             {loading ? (
-              <p className="text-center text-muted-foreground py-8">Loading...</p>
+              <div className="text-center py-12">
+                <div className="inline-block w-12 h-12 rounded-full border-4 border-accent/20 border-t-accent animate-spin"></div>
+                <p className="text-muted-foreground mt-4">Loading customers...</p>
+              </div>
             ) : filteredCustomers.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                {searchTerm ? "No customers found" : "No customers yet. Add your first customer!"}
-              </p>
+              <div className="text-center py-16">
+                <div className="w-20 h-20 rounded-3xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
+                  <Store className="w-10 h-10 text-accent" />
+                </div>
+                <p className="text-lg font-semibold mb-2">
+                  {searchTerm ? "No customers found" : "No customers yet"}
+                </p>
+                <p className="text-muted-foreground mb-6">
+                  {searchTerm ? "Try adjusting your search" : "Start building your customer directory"}
+                </p>
+                {!searchTerm && (
+                  <Button onClick={() => setOpen(true)} variant="gradient">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Your First Customer
+                  </Button>
+                )}
+              </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Mobile Number</TableHead>
-                    <TableHead>Added On</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCustomers.map((customer) => (
-                    <TableRow key={customer.id}>
-                      <TableCell className="font-medium">{customer.name}</TableCell>
-                      <TableCell>{customer.mobile_number}</TableCell>
-                      <TableCell>{new Date(customer.created_at).toLocaleDateString()}</TableCell>
+              <div className="rounded-xl border-2 border-border/50 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/50">
+                      <TableHead className="font-bold">Name</TableHead>
+                      <TableHead className="font-bold">Mobile Number</TableHead>
+                      <TableHead className="font-bold">Added On</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCustomers.map((customer, index) => (
+                      <TableRow 
+                        key={customer.id}
+                        className="hover:bg-accent/5 transition-colors animate-fade-in"
+                        style={{ animationDelay: `${index * 0.05}s` }}
+                      >
+                        <TableCell className="font-medium">{customer.name}</TableCell>
+                        <TableCell className="text-accent font-semibold">{customer.mobile_number}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {new Date(customer.created_at).toLocaleDateString('en-IN', { 
+                            day: 'numeric', 
+                            month: 'short', 
+                            year: 'numeric' 
+                          })}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
