@@ -170,52 +170,174 @@ const Invoices = () => {
 
     const doc = new jsPDF();
     
-    doc.setFontSize(20);
-    doc.text("INVOICE", 105, 20, { align: "center" });
+    // Modern header with gradient effect (simulated with colors)
+    doc.setFillColor(155, 81, 224); // Primary purple
+    doc.rect(0, 0, 210, 45, 'F');
     
+    // Company name
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(28);
+    doc.setFont(undefined, 'bold');
+    doc.text("MAHADEV TRADERS", 105, 20, { align: "center" });
+    
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'normal');
+    doc.text("Business Management System", 105, 28, { align: "center" });
+    
+    // Invoice badge
+    doc.setFillColor(251, 146, 60); // Accent orange
+    doc.roundedRect(15, 10, 35, 12, 3, 3, 'F');
     doc.setFontSize(10);
-    doc.text(`Date: ${new Date(invoice.invoice_date).toLocaleDateString()}`, 20, 35);
-    doc.text(`Invoice ID: ${invoice.id.substring(0, 8).toUpperCase()}`, 20, 42);
+    doc.setFont(undefined, 'bold');
+    doc.text("INVOICE", 32.5, 17, { align: "center" });
     
-    doc.text(`Customer: ${invoice.customer_name}`, 20, 55);
-    doc.text(`Mobile: ${invoice.customer_mobile}`, 20, 62);
-    doc.text(`Payment: ${invoice.payment_type}`, 20, 69);
-
+    // Reset text color
+    doc.setTextColor(0, 0, 0);
+    
+    // Invoice details section
+    doc.setFillColor(245, 245, 250);
+    doc.roundedRect(15, 55, 180, 35, 3, 3, 'F');
+    
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 120);
+    doc.text("Invoice Details", 20, 62);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'bold');
+    doc.text("Invoice ID:", 20, 70);
+    doc.setFont(undefined, 'normal');
+    doc.text(`#${invoice.id.substring(0, 8).toUpperCase()}`, 60, 70);
+    
+    doc.setFont(undefined, 'bold');
+    doc.text("Date:", 20, 78);
+    doc.setFont(undefined, 'normal');
+    doc.text(new Date(invoice.invoice_date).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    }), 60, 78);
+    
+    doc.setFont(undefined, 'bold');
+    doc.text("Payment:", 20, 86);
+    doc.setFont(undefined, 'normal');
+    
+    // Payment type badge
+    const paymentColors: Record<string, number[]> = {
+      'Cash': [34, 197, 94],
+      'Online': [59, 130, 246],
+      'Pending': [251, 146, 60]
+    };
+    const color = paymentColors[invoice.payment_type] || [100, 100, 120];
+    doc.setFillColor(color[0], color[1], color[2], 0.1);
+    doc.roundedRect(58, 81, 25, 7, 2, 2, 'F');
+    doc.setTextColor(color[0], color[1], color[2]);
+    doc.text(invoice.payment_type, 60, 86);
+    doc.setTextColor(0, 0, 0);
+    
+    // Customer section
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 120);
+    doc.text("Customer Details", 120, 62);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'bold');
+    doc.text(invoice.customer_name, 120, 70);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(10);
+    doc.text(`📱 ${invoice.customer_mobile}`, 120, 78);
+    
+    // Items table with modern styling
     autoTable(doc, {
-      startY: 80,
-      head: [['Item', 'Quantity', 'Unit', 'Price', 'Subtotal']],
+      startY: 100,
+      head: [['Item Name', 'Qty', 'Unit', 'Price (₹)', 'Amount (₹)']],
       body: items.map((item: InvoiceItem) => [
         item.item_name,
-        item.quantity,
+        item.quantity.toString(),
         item.unit_type,
-        `Rs. ${item.price.toFixed(2)}`,
-        `Rs. ${item.subtotal.toFixed(2)}`
+        item.price.toFixed(2),
+        item.subtotal.toFixed(2)
       ]),
-      foot: [['', '', '', 'Total:', `Rs. ${invoice.total_amount.toFixed(2)}`]],
-      theme: 'striped',
-      headStyles: { fillColor: [59, 130, 246] }
+      foot: [['', '', '', 'Total Amount:', invoice.total_amount.toFixed(2)]],
+      theme: 'grid',
+      headStyles: {
+        fillColor: [155, 81, 224],
+        textColor: [255, 255, 255],
+        fontSize: 11,
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      bodyStyles: {
+        fontSize: 10,
+        cellPadding: 5
+      },
+      footStyles: {
+        fillColor: [34, 197, 94],
+        textColor: [255, 255, 255],
+        fontSize: 12,
+        fontStyle: 'bold',
+        halign: 'right'
+      },
+      alternateRowStyles: {
+        fillColor: [250, 250, 252]
+      },
+      columnStyles: {
+        0: { cellWidth: 70 },
+        1: { halign: 'center', cellWidth: 20 },
+        2: { halign: 'center', cellWidth: 25 },
+        3: { halign: 'right', cellWidth: 35 },
+        4: { halign: 'right', cellWidth: 35, fontStyle: 'bold' }
+      }
     });
 
-    doc.save(`invoice-${invoice.id.substring(0, 8)}.pdf`);
+    // Footer section
+    const finalY = (doc as any).lastAutoTable.finalY || 200;
+    
+    // Thank you message
+    doc.setFillColor(245, 245, 250);
+    doc.roundedRect(15, finalY + 15, 180, 20, 3, 3, 'F');
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 120);
+    doc.text("Thank you for your business!", 105, finalY + 25, { align: "center" });
+    doc.setFontSize(8);
+    doc.text("For any queries, please contact us", 105, finalY + 30, { align: "center" });
+    
+    // Company footer
+    doc.setFontSize(7);
+    doc.setTextColor(150, 150, 160);
+    doc.text("Generated by Mahadev Traders Business Management System", 105, 285, { align: "center" });
+
+    doc.save(`Invoice-${invoice.customer_name.replace(/\s+/g, '-')}-${invoice.id.substring(0, 8)}.pdf`);
     
     toast({
       title: "Success",
-      description: "Invoice PDF downloaded"
+      description: "Professional invoice PDF downloaded"
     });
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/5">
+      <header className="border-b border-border/40 bg-card/80 backdrop-blur-xl shadow-card sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+          <div className="flex items-center gap-3 animate-fade-in">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate("/dashboard")}
+              className="hover:bg-secondary/10"
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-              <Store className="w-6 h-6 text-primary-foreground" />
+            <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center shadow-elegant">
+              <Store className="w-7 h-7 text-primary-foreground" />
             </div>
-            <h1 className="text-xl font-bold">Invoices</h1>
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Invoices
+              </h1>
+              <p className="text-xs text-muted-foreground">Manage billing & payments</p>
+            </div>
           </div>
           <ThemeToggle />
         </div>
@@ -223,90 +345,131 @@ const Invoices = () => {
       <TopNav />
 
       <main className="container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Invoice List</CardTitle>
-            <Button onClick={() => navigate("/create-invoice")}>
-              <Plus className="mr-2 h-4 w-4" />
+        <Card className="shadow-card border-2 border-secondary/10 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
+            <div>
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
+                Invoice History
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                {invoices.length} invoices generated
+              </p>
+            </div>
+            <Button 
+              onClick={() => navigate("/create-invoice")}
+              variant="gradient"
+              size="lg"
+              className="shadow-elegant"
+            >
+              <Plus className="mr-2 h-5 w-5" />
               Create Invoice
             </Button>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <p className="text-center text-muted-foreground py-8">Loading...</p>
-            ) : invoices.length === 0 ? (
               <div className="text-center py-12">
-                <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground mb-4">No invoices yet. Create your first invoice!</p>
+                <div className="inline-block w-12 h-12 rounded-full border-4 border-secondary/20 border-t-secondary animate-spin"></div>
+                <p className="text-muted-foreground mt-4">Loading invoices...</p>
+              </div>
+            ) : invoices.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-20 h-20 rounded-3xl bg-secondary/10 flex items-center justify-center mx-auto mb-4">
+                  <FileText className="w-10 h-10 text-secondary" />
+                </div>
+                <p className="text-lg font-semibold mb-2">No invoices yet</p>
+                <p className="text-muted-foreground mb-6">Start creating invoices for your customers</p>
+                <Button onClick={() => navigate("/create-invoice")} variant="gradient">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Your First Invoice
+                </Button>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Mobile</TableHead>
-                    <TableHead>Payment</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {invoices.map((invoice) => (
-                    <TableRow key={invoice.id}>
-                      <TableCell>{new Date(invoice.invoice_date).toLocaleDateString()}</TableCell>
-                      <TableCell 
-                        className="font-medium text-primary cursor-pointer hover:underline"
-                        onClick={() => handleShowSummary(invoice)}
-                      >
-                        {invoice.customer_name}
-                      </TableCell>
-                      <TableCell>{invoice.customer_mobile}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          invoice.payment_type === 'Pending' 
-                            ? 'bg-destructive/10 text-destructive' 
-                            : 'bg-accent/10 text-accent'
-                        }`}>
-                          {invoice.payment_type}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">₹{invoice.total_amount.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => navigate(`/edit-invoice/${invoice.id}`)}
-                            title="Edit"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDownloadPDF(invoice)}
-                            title="Download PDF"
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setInvoiceToDelete(invoice.id);
-                              setDeleteDialogOpen(true);
-                            }}
-                            title="Delete"
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+              <div className="rounded-xl border-2 border-border/50 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/50">
+                      <TableHead className="font-bold">Date</TableHead>
+                      <TableHead className="font-bold">Customer</TableHead>
+                      <TableHead className="font-bold">Mobile</TableHead>
+                      <TableHead className="font-bold">Payment</TableHead>
+                      <TableHead className="text-right font-bold">Amount</TableHead>
+                      <TableHead className="text-right font-bold">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {invoices.map((invoice, index) => (
+                      <TableRow 
+                        key={invoice.id}
+                        className="hover:bg-secondary/5 transition-colors animate-fade-in"
+                        style={{ animationDelay: `${index * 0.05}s` }}
+                      >
+                        <TableCell className="text-muted-foreground">
+                          {new Date(invoice.invoice_date).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })}
+                        </TableCell>
+                        <TableCell 
+                          className="font-medium cursor-pointer hover:text-primary transition-colors"
+                          onClick={() => handleShowSummary(invoice)}
+                        >
+                          {invoice.customer_name}
+                        </TableCell>
+                        <TableCell className="text-secondary">{invoice.customer_mobile}</TableCell>
+                        <TableCell>
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            invoice.payment_type === 'Cash'
+                              ? 'bg-success/10 text-success' 
+                              : invoice.payment_type === 'Online'
+                              ? 'bg-primary/10 text-primary'
+                              : 'bg-accent/10 text-accent'
+                          }`}>
+                            {invoice.payment_type}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-success text-base">
+                          ₹{invoice.total_amount.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex gap-1 justify-end">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => navigate(`/edit-invoice/${invoice.id}`)}
+                              title="Edit"
+                              className="hover:bg-primary/10 hover:text-primary"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDownloadPDF(invoice)}
+                              title="Download PDF"
+                              className="hover:bg-success/10 hover:text-success"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setInvoiceToDelete(invoice.id);
+                                setDeleteDialogOpen(true);
+                              }}
+                              title="Delete"
+                              className="hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
