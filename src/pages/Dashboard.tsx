@@ -13,6 +13,10 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [stockCount, setStockCount] = useState(0);
+  const [invoiceCount, setInvoiceCount] = useState(0);
+  const [customerCount, setCustomerCount] = useState(0);
+  const [totalSales, setTotalSales] = useState(0);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -27,12 +31,43 @@ const Dashboard = () => {
       setUser(session?.user ?? null);
       if (!session) {
         navigate("/auth");
+      } else {
+        fetchDashboardData();
       }
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const fetchDashboardData = async () => {
+    // Fetch stock items count
+    const { count: stockItems } = await supabase
+      .from('stock_items')
+      .select('*', { count: 'exact', head: true });
+    
+    // Fetch invoices count
+    const { count: invoices } = await supabase
+      .from('invoices')
+      .select('*', { count: 'exact', head: true });
+    
+    // Fetch customers count
+    const { count: customers } = await supabase
+      .from('customers')
+      .select('*', { count: 'exact', head: true });
+    
+    // Fetch total sales amount
+    const { data: salesData } = await supabase
+      .from('invoices')
+      .select('total_amount');
+    
+    const total = salesData?.reduce((sum, inv) => sum + Number(inv.total_amount), 0) || 0;
+    
+    setStockCount(stockItems || 0);
+    setInvoiceCount(invoices || 0);
+    setCustomerCount(customers || 0);
+    setTotalSales(total);
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -103,9 +138,11 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">Inventory</div>
+              <div className="text-3xl font-bold gradient-primary bg-clip-text text-transparent">
+                {stockCount}
+              </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Track and manage your stock items
+                Items in inventory
               </p>
             </CardContent>
           </Card>
@@ -122,9 +159,11 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">Billing</div>
+              <div className="text-3xl font-bold gradient-primary bg-clip-text text-transparent">
+                {invoiceCount}
+              </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Create and manage invoices
+                Total invoices created
               </p>
             </CardContent>
           </Card>
@@ -141,9 +180,11 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold gradient-accent bg-clip-text text-transparent">Directory</div>
+              <div className="text-3xl font-bold gradient-accent bg-clip-text text-transparent">
+                {customerCount}
+              </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Manage customer information
+                Registered customers
               </p>
             </CardContent>
           </Card>
@@ -160,9 +201,11 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold gradient-success bg-clip-text text-transparent">Analytics</div>
+              <div className="text-3xl font-bold gradient-success bg-clip-text text-transparent">
+                ₹{totalSales.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+              </div>
               <p className="text-xs text-muted-foreground mt-2">
-                View business insights
+                Total sales revenue
               </p>
             </CardContent>
           </Card>
