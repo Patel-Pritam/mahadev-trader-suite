@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TopNav } from "@/components/TopNav";
-import { Store, ArrowLeft, Plus, Pencil, Trash2 } from "lucide-react";
+import { Store, ArrowLeft, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
@@ -35,6 +35,7 @@ const Stock = () => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     price: "",
@@ -225,28 +226,29 @@ const Stock = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Card className="shadow-card border-2 border-primary/10 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
-            <div>
-              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-                Stock Items
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                {items.length} items in inventory
-              </p>
-            </div>
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  onClick={() => { resetForm(); setOpen(true); }}
-                  variant="gradient"
-                  size="lg"
-                  className="shadow-elegant"
-                >
-                  <Plus className="mr-2 h-5 w-5" />
-                  Add Item
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="border-2 border-primary/20 shadow-elegant">
+          <CardHeader className="space-y-4 pb-6">
+            <div className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
+                  Stock Items
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {items.length} items in inventory
+                </p>
+              </div>
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    onClick={() => { resetForm(); setOpen(true); }}
+                    variant="gradient"
+                    size="lg"
+                    className="shadow-elegant"
+                  >
+                    <Plus className="mr-2 h-5 w-5" />
+                    Add Item
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="border-2 border-primary/20 shadow-elegant">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                     {editingItem ? "Edit Item" : "Add New Item"}
@@ -305,82 +307,104 @@ const Stock = () => {
                 </form>
               </DialogContent>
             </Dialog>
-          </CardHeader>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search stock items..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </CardHeader>
           <CardContent>
             {loading ? (
               <div className="text-center py-12">
                 <div className="inline-block w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
                 <p className="text-muted-foreground mt-4">Loading inventory...</p>
               </div>
-            ) : items.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <Store className="w-10 h-10 text-primary" />
+            ) : (() => {
+              const filteredItems = items.filter(item => 
+                item.name.toLowerCase().includes(searchTerm.toLowerCase())
+              );
+              
+              return filteredItems.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <Store className="w-10 h-10 text-primary" />
+                  </div>
+                  <p className="text-lg font-semibold mb-2">
+                    {searchTerm ? "No items found" : "No stock items yet"}
+                  </p>
+                  <p className="text-muted-foreground mb-6">
+                    {searchTerm ? "Try a different search term" : "Get started by adding your first inventory item"}
+                  </p>
+                  {!searchTerm && (
+                    <Button onClick={() => { resetForm(); setOpen(true); }} variant="gradient">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Your First Item
+                    </Button>
+                  )}
                 </div>
-                <p className="text-lg font-semibold mb-2">No stock items yet</p>
-                <p className="text-muted-foreground mb-6">Get started by adding your first inventory item</p>
-                <Button onClick={() => { resetForm(); setOpen(true); }} variant="gradient">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Your First Item
-                </Button>
-              </div>
-            ) : (
-              <div className="rounded-xl border-2 border-border/50 overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/30 hover:bg-muted/50">
-                      <TableHead className="font-bold">Name</TableHead>
-                      <TableHead className="font-bold">Price</TableHead>
-                      <TableHead className="font-bold">Quantity</TableHead>
-                      <TableHead className="font-bold">Unit</TableHead>
-                      <TableHead className="text-right font-bold">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {items.map((item, index) => (
-                      <TableRow 
-                        key={item.id} 
-                        className="hover:bg-primary/5 transition-colors animate-fade-in"
-                        style={{ animationDelay: `${index * 0.05}s` }}
-                      >
-                        <TableCell className="font-medium">{item.name}</TableCell>
-                        <TableCell className="text-success font-semibold">₹{item.price.toFixed(2)}</TableCell>
-                        <TableCell>
-                          <span className={`font-semibold ${item.quantity < 10 ? 'text-destructive' : 'text-foreground'}`}>
-                            {item.quantity}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                            {item.unit_type}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => openEditDialog(item)}
-                              className="hover:bg-primary/10 hover:text-primary"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => handleDelete(item.id)}
-                              className="hover:bg-destructive/10 hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+              ) : (
+                <div className="rounded-xl border-2 border-border/50 overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/30 hover:bg-muted/50">
+                        <TableHead className="font-bold">Name</TableHead>
+                        <TableHead className="font-bold">Price</TableHead>
+                        <TableHead className="font-bold">Quantity</TableHead>
+                        <TableHead className="font-bold">Unit</TableHead>
+                        <TableHead className="text-right font-bold">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+                    </TableHeader>
+                    <TableBody>
+                      {filteredItems.map((item, index) => (
+                        <TableRow 
+                          key={item.id} 
+                          className="hover:bg-primary/5 transition-colors animate-fade-in"
+                          style={{ animationDelay: `${index * 0.05}s` }}
+                        >
+                          <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell className="text-success font-semibold">₹{item.price.toFixed(2)}</TableCell>
+                          <TableCell>
+                            <span className={`font-semibold ${item.quantity < 10 ? 'text-destructive' : 'text-foreground'}`}>
+                              {item.quantity}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                              {item.unit_type}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => openEditDialog(item)}
+                                className="hover:bg-primary/10 hover:text-primary"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleDelete(item.id)}
+                                className="hover:bg-destructive/10 hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
       </main>
