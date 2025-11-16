@@ -18,6 +18,11 @@ const invoiceItemSchema = z.object({
   price: z.number().positive("Price must be positive").max(999999.99, "Price must be less than 1,000,000")
 });
 
+const customerSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
+  mobile: z.string().trim().regex(/^[6-9]\d{9}$/, "Mobile number must be a valid 10-digit number starting with 6-9")
+});
+
 interface StockItem {
   id: string;
   name: string;
@@ -209,12 +214,20 @@ const EditInvoice = () => {
   };
 
   const handleUpdateInvoice = async () => {
-    if (!customerName || !customerMobile) {
-      toast({
-        title: "Missing information",
-        description: "Please provide customer name and mobile",
-        variant: "destructive"
+    // Validate customer data
+    try {
+      customerSchema.parse({
+        name: customerName,
+        mobile: customerMobile
       });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive"
+        });
+      }
       return;
     }
 
