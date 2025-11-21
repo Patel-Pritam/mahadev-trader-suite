@@ -5,7 +5,7 @@ export const TopNav = () => {
   return (
     <nav className="border-b border-border/40 bg-card/80 backdrop-blur-xl shadow-card">
       <div className="container mx-auto px-4">
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1">
           <NavLink
             to="/stock"
             className="group flex items-center gap-2 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-300 border-b-2 border-transparent hover:bg-primary/5 rounded-t-lg"
