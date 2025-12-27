@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TopNav } from "@/components/TopNav";
-import { Store, ArrowLeft, Plus, Search, Trash2 } from "lucide-react";
+import { Store, ArrowLeft, Plus, Search, Trash2, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
@@ -31,6 +31,7 @@ const Customers = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     name: "",
@@ -100,25 +101,46 @@ const Customers = () => {
         mobile_number: formData.mobile_number,
       });
 
-      const { error } = await supabase
-        .from("customers")
-        .insert([{
-          name: validatedData.name,
-          mobile_number: validatedData.mobile_number,
-          user_id: user.id
-        }]);
+      if (editingCustomer) {
+        const { error } = await supabase
+          .from("customers")
+          .update({
+            name: validatedData.name,
+            mobile_number: validatedData.mobile_number
+          })
+          .eq("id", editingCustomer.id);
 
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to add customer",
-          variant: "destructive"
-        });
+        if (error) {
+          toast({
+            title: "Error",
+            description: "Failed to update customer",
+            variant: "destructive"
+          });
+        } else {
+          toast({ title: "Success", description: "Customer updated successfully" });
+          refetch();
+          resetForm();
+        }
       } else {
-        toast({ title: "Success", description: "Customer added successfully" });
-        refetch();
-        setFormData({ name: "", mobile_number: "" });
-        setOpen(false);
+        const { error } = await supabase
+          .from("customers")
+          .insert([{
+            name: validatedData.name,
+            mobile_number: validatedData.mobile_number,
+            user_id: user.id
+          }]);
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: "Failed to add customer",
+            variant: "destructive"
+          });
+        } else {
+          toast({ title: "Success", description: "Customer added successfully" });
+          refetch();
+          resetForm();
+        }
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -129,6 +151,21 @@ const Customers = () => {
         });
       }
     }
+  };
+
+  const resetForm = () => {
+    setFormData({ name: "", mobile_number: "" });
+    setEditingCustomer(null);
+    setOpen(false);
+  };
+
+  const openEditDialog = (customer: Customer) => {
+    setEditingCustomer(customer);
+    setFormData({
+      name: customer.name,
+      mobile_number: customer.mobile_number
+    });
+    setOpen(true);
   };
 
   const handleDelete = async (customerId: string) => {
@@ -201,9 +238,17 @@ const Customers = () => {
                 {customers.length} registered customers
               </p>
             </div>
-            <Dialog open={open} onOpenChange={setOpen}>
+            <Dialog open={open} onOpenChange={(isOpen) => {
+              if (!isOpen) resetForm();
+              setOpen(isOpen);
+            }}>
               <DialogTrigger asChild>
-                <Button variant="gradient" size="lg" className="shadow-elegant">
+                <Button 
+                  variant="gradient" 
+                  size="lg" 
+                  className="shadow-elegant"
+                  onClick={() => { resetForm(); setOpen(true); }}
+                >
                   <Plus className="mr-2 h-5 w-5" />
                   Add Customer
                 </Button>
@@ -211,7 +256,7 @@ const Customers = () => {
               <DialogContent className="border-2 border-accent/20 shadow-elegant">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
-                    Add New Customer
+                    {editingCustomer ? "Edit Customer" : "Add New Customer"}
                   </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -238,7 +283,7 @@ const Customers = () => {
                     />
                   </div>
                   <Button type="submit" variant="gradient" className="w-full" size="lg">
-                    Add Customer
+                    {editingCustomer ? "Update" : "Add"} Customer
                   </Button>
                 </form>
               </DialogContent>
@@ -308,34 +353,44 @@ const Customers = () => {
                           })}
                         </TableCell>
                         <TableCell className="text-right">
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                className="hover:bg-destructive/10 hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Customer</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete {customer.name}? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction 
-                                  onClick={() => handleDelete(customer.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          <div className="flex justify-end gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => openEditDialog(customer)}
+                              className="hover:bg-primary/10 hover:text-primary"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  className="hover:bg-destructive/10 hover:text-destructive"
                                 >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Customer</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete {customer.name}? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDelete(customer.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
