@@ -65,6 +65,28 @@ const CreateInvoice = () => {
     checkAuthAndFetchData();
   }, []);
 
+  // Real-time subscription for stock items
+  useEffect(() => {
+    const channel = supabase
+      .channel('create-invoice-stock-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'stock_items'
+        },
+        () => {
+          fetchStockItems();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const checkAuthAndFetchData = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
