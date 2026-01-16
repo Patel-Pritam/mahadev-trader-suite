@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TopNav } from "@/components/TopNav";
-import { Store, ArrowLeft, Plus, FileText, Download, Pencil, Trash2 } from "lucide-react";
+import { Store, ArrowLeft, Plus, FileText, Download, Pencil, Trash2, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -316,6 +316,54 @@ const Invoices = () => {
     });
   };
 
+  const handleSendWhatsApp = async (invoice: Invoice) => {
+    const { data: items, error } = await supabase
+      .from("invoice_items")
+      .select("*")
+      .eq("invoice_id", invoice.id);
+
+    if (error || !items) {
+      toast({
+        title: "Error",
+        description: "Failed to load invoice items",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Format invoice message
+    const itemsList = items.map((item: InvoiceItem) => 
+      `• ${item.item_name} - ${item.quantity} ${item.unit_type} × ₹${item.price} = ₹${item.subtotal.toFixed(2)}`
+    ).join('\n');
+
+    const message = `🧾 *Invoice*
+
+*Customer:* ${invoice.customer_name}
+*Date:* ${new Date(invoice.invoice_date).toLocaleDateString('en-IN')}
+*Payment:* ${invoice.payment_type}
+
+*Items:*
+${itemsList}
+
+*Total Amount: ₹${invoice.total_amount.toFixed(2)}*
+
+Thank you for your business! 🙏`;
+
+    // Format mobile number (remove spaces, dashes, and add country code if needed)
+    let mobile = invoice.customer_mobile.replace(/[\s-]/g, '');
+    if (!mobile.startsWith('+')) {
+      mobile = '+91' + mobile; // Default to India country code
+    }
+
+    const whatsappUrl = `https://wa.me/${mobile.replace('+', '')}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+
+    toast({
+      title: "WhatsApp Opened",
+      description: "Invoice details ready to send"
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/5">
       <header className="border-b border-border/40 bg-card/80 backdrop-blur-xl shadow-card sticky top-0 z-10">
@@ -433,6 +481,15 @@ const Invoices = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex gap-1 justify-end">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleSendWhatsApp(invoice)}
+                              title="Send via WhatsApp"
+                              className="hover:bg-green-500/10 hover:text-green-500"
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
