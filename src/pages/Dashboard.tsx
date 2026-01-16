@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [stockCount, setStockCount] = useState(0);
   const [invoiceCount, setInvoiceCount] = useState(0);
   const [customerCount, setCustomerCount] = useState(0);
+  const [businessName, setBusinessName] = useState("");
   const [totalSales, setTotalSales] = useState(0);
 
   useEffect(() => {
@@ -41,6 +42,20 @@ const Dashboard = () => {
   }, [navigate]);
 
   const fetchDashboardData = async () => {
+    // Fetch business name from profile
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('business_name')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (profile) {
+        setBusinessName(profile.business_name);
+      }
+    }
+
     // Fetch stock items count
     const { count: stockItems } = await supabase
       .from('stock_items')
@@ -98,7 +113,7 @@ const Dashboard = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Mahadev Traders
+                {businessName || "Business Manager"}
               </h1>
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
