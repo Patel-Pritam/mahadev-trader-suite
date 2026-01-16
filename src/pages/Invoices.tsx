@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TopNav } from "@/components/TopNav";
-import { Store, ArrowLeft, Plus, FileText, Download, Pencil, Trash2, MessageCircle } from "lucide-react";
+import { Store, ArrowLeft, Plus, FileText, Download, Pencil, Trash2, MessageCircle, Smartphone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -364,6 +364,51 @@ Thank you for your business! 🙏`;
     });
   };
 
+  const handleSendSMS = async (invoice: Invoice) => {
+    const { data: items, error } = await supabase
+      .from("invoice_items")
+      .select("*")
+      .eq("invoice_id", invoice.id);
+
+    if (error || !items) {
+      toast({
+        title: "Error",
+        description: "Failed to load invoice items",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Format invoice message (plain text for SMS)
+    const itemsList = items.map((item: InvoiceItem) => 
+      `${item.item_name} - ${item.quantity} ${item.unit_type} x Rs.${item.price} = Rs.${item.subtotal.toFixed(2)}`
+    ).join('\n');
+
+    const message = `Invoice
+
+Customer: ${invoice.customer_name}
+Date: ${new Date(invoice.invoice_date).toLocaleDateString('en-IN')}
+Payment: ${invoice.payment_type}
+
+Items:
+${itemsList}
+
+Total: Rs.${invoice.total_amount.toFixed(2)}
+
+Thank you!`;
+
+    // Format mobile number (remove spaces, dashes)
+    const mobile = invoice.customer_mobile.replace(/[\s-]/g, '');
+
+    const smsUrl = `sms:${mobile}?body=${encodeURIComponent(message)}`;
+    window.location.href = smsUrl;
+
+    toast({
+      title: "SMS App Opened",
+      description: "Invoice details ready to send via SMS"
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/5">
       <header className="border-b border-border/40 bg-card/80 backdrop-blur-xl shadow-card sticky top-0 z-10">
@@ -489,6 +534,15 @@ Thank you for your business! 🙏`;
                               className="hover:bg-green-500/10 hover:text-green-500"
                             >
                               <MessageCircle className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleSendSMS(invoice)}
+                              title="Send via SMS"
+                              className="hover:bg-blue-500/10 hover:text-blue-500"
+                            >
+                              <Smartphone className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
