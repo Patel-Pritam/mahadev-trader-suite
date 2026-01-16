@@ -27,6 +27,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [businessName, setBusinessName] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -78,9 +79,18 @@ const Auth = () => {
       return;
     }
 
+    if (!businessName.trim()) {
+      toast({
+        title: "Business name required",
+        description: "Please enter your business name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -88,23 +98,45 @@ const Auth = () => {
       },
     });
 
-    setLoading(false);
-
     if (error) {
+      setLoading(false);
       toast({
         title: "Sign up failed",
         description: error.message,
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Success!",
-        description: "Account created successfully. You can now log in.",
-      });
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
+      return;
     }
+
+    // Create profile with business name
+    if (data.user) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: data.user.id,
+          business_name: businessName.trim(),
+        });
+
+      if (profileError) {
+        setLoading(false);
+        toast({
+          title: "Profile creation failed",
+          description: profileError.message,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    setLoading(false);
+    toast({
+      title: "Success!",
+      description: "Account created successfully. You can now log in.",
+    });
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setBusinessName("");
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -141,7 +173,7 @@ const Auth = () => {
             </div>
           </div>
           <CardTitle className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Mahadev Traders
+            Business Manager
           </CardTitle>
           <CardDescription className="text-base">Modern Business Management</CardDescription>
         </CardHeader>
@@ -199,6 +231,17 @@ const Auth = () => {
 
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="business-name">Business Name</Label>
+                  <Input
+                    id="business-name"
+                    type="text"
+                    placeholder="Your Business Name"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    required
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
                   <Input

@@ -139,6 +139,30 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          business_name: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_name: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_name?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       stock_items: {
         Row: {
           created_at: string
