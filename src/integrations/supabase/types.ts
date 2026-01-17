@@ -96,8 +96,8 @@ export type Database = {
         Row: {
           created_at: string
           customer_id: string | null
-          customer_mobile: string
-          customer_name: string
+          customer_mobile: string | null
+          customer_name: string | null
           id: string
           invoice_date: string
           payment_type: string
@@ -108,8 +108,8 @@ export type Database = {
         Insert: {
           created_at?: string
           customer_id?: string | null
-          customer_mobile: string
-          customer_name: string
+          customer_mobile?: string | null
+          customer_name?: string | null
           id?: string
           invoice_date?: string
           payment_type: string
@@ -120,8 +120,8 @@ export type Database = {
         Update: {
           created_at?: string
           customer_id?: string | null
-          customer_mobile?: string
-          customer_name?: string
+          customer_mobile?: string | null
+          customer_name?: string | null
           id?: string
           invoice_date?: string
           payment_type?: string

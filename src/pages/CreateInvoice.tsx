@@ -305,14 +305,12 @@ const CreateInvoice = () => {
         customerId = newCustomer.id;
       }
 
-      // Create invoice
+      // Create invoice (customer details stored in customers table, not duplicated here)
       const { data: invoice, error: invoiceError } = await supabase
         .from("invoices")
         .insert([{
           user_id: user.id,
           customer_id: customerId,
-          customer_name: customerName,
-          customer_mobile: customerMobile,
           payment_type: paymentType,
           total_amount: calculateTotal()
         }])

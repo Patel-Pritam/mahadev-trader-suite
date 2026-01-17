@@ -89,8 +89,24 @@ const EditInvoice = () => {
       return;
     }
 
-    setCustomerName(invoice.customer_name);
-    setCustomerMobile(invoice.customer_mobile);
+    // Fetch customer details from customers table if customer_id exists
+    if (invoice.customer_id) {
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("name, mobile_number")
+        .eq("id", invoice.customer_id)
+        .single();
+      
+      if (customer) {
+        setCustomerName(customer.name);
+        setCustomerMobile(customer.mobile_number);
+      }
+    } else {
+      // Fallback for old invoices with inline customer data
+      setCustomerName(invoice.customer_name || '');
+      setCustomerMobile(invoice.customer_mobile || '');
+    }
+    
     setPaymentType(invoice.payment_type as "Online" | "Cash" | "Pending");
 
     const { data: items, error: itemsError } = await supabase
@@ -245,12 +261,10 @@ const EditInvoice = () => {
     try {
       const totalAmount = calculateTotal();
 
-      // Update invoice
+      // Update invoice (customer details are in customers table, not duplicated here)
       const { error: invoiceError } = await supabase
         .from("invoices")
         .update({
-          customer_name: customerName,
-          customer_mobile: customerMobile,
           payment_type: paymentType,
           total_amount: totalAmount
         })
