@@ -14,8 +14,11 @@ const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [stockCount, setStockCount] = useState(0);
+  const [stockValue, setStockValue] = useState(0);
   const [invoiceCount, setInvoiceCount] = useState(0);
+  const [invoiceTotal, setInvoiceTotal] = useState(0);
   const [customerCount, setCustomerCount] = useState(0);
+  const [customerTotal, setCustomerTotal] = useState(0);
   const [businessName, setBusinessName] = useState("");
   const [totalSales, setTotalSales] = useState(0);
 
@@ -56,32 +59,35 @@ const Dashboard = () => {
       }
     }
 
-    // Fetch stock items count
-    const { count: stockItems } = await supabase
+    // Fetch stock items count and total value
+    const { data: stockData, count: stockItems } = await supabase
       .from('stock_items')
-      .select('*', { count: 'exact', head: true });
+      .select('price, quantity', { count: 'exact' });
     
-    // Fetch invoices count
-    const { count: invoices } = await supabase
+    const stockTotalValue = stockData?.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0) || 0;
+    
+    // Fetch invoices count and total
+    const { data: invoicesData, count: invoices } = await supabase
       .from('invoices')
-      .select('*', { count: 'exact', head: true });
+      .select('total_amount', { count: 'exact' });
     
-    // Fetch customers count
+    const invoicesTotalAmount = invoicesData?.reduce((sum, inv) => sum + Number(inv.total_amount), 0) || 0;
+    
+    // Fetch customers count and their total invoice amount
     const { count: customers } = await supabase
       .from('customers')
       .select('*', { count: 'exact', head: true });
     
-    // Fetch total sales amount
-    const { data: salesData } = await supabase
-      .from('invoices')
-      .select('total_amount');
-    
-    const total = salesData?.reduce((sum, inv) => sum + Number(inv.total_amount), 0) || 0;
+    // Customer total is same as invoice total (all invoices linked to customers)
+    const customersTotalAmount = invoicesTotalAmount;
     
     setStockCount(stockItems || 0);
+    setStockValue(stockTotalValue);
     setInvoiceCount(invoices || 0);
+    setInvoiceTotal(invoicesTotalAmount);
     setCustomerCount(customers || 0);
-    setTotalSales(total);
+    setCustomerTotal(customersTotalAmount);
+    setTotalSales(invoicesTotalAmount);
   };
 
   const handleSignOut = async () => {
@@ -154,10 +160,10 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold gradient-primary bg-clip-text text-transparent">
-                {stockCount}
+                ₹{stockValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Items in inventory
+                {stockCount} items in inventory
               </p>
             </CardContent>
           </Card>
@@ -175,10 +181,10 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold gradient-primary bg-clip-text text-transparent">
-                {invoiceCount}
+                ₹{invoiceTotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Total invoices created
+                {invoiceCount} invoices created
               </p>
             </CardContent>
           </Card>
@@ -196,10 +202,10 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold gradient-accent bg-clip-text text-transparent">
-                {customerCount}
+                ₹{customerTotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Registered customers
+                {customerCount} registered customers
               </p>
             </CardContent>
           </Card>
