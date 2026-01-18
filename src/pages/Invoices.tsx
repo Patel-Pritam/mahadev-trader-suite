@@ -243,8 +243,8 @@ const Invoices = () => {
         item.item_name,
         item.quantity.toString(),
         item.unit_type,
-        `₹${item.price.toFixed(2)}`,
-        `₹${item.subtotal.toFixed(2)}`
+        `Rs. ${item.price.toFixed(2)}`,
+        `Rs. ${item.subtotal.toFixed(2)}`
       ]),
       theme: 'grid',
       headStyles: {
@@ -284,7 +284,7 @@ const Invoices = () => {
     doc.setFont(undefined, 'bold');
     doc.setTextColor(0, 0, 0);
     doc.text("Total Value", pageWidth - 75, finalY + 6);
-    doc.text(`₹${invoice.total_amount.toFixed(2)}`, pageWidth - 18, finalY + 6, { align: 'right' });
+    doc.text(`Rs. ${invoice.total_amount.toFixed(2)}`, pageWidth - 18, finalY + 6, { align: 'right' });
     
     // Grand Total row
     doc.setFillColor(155, 81, 224);
@@ -292,7 +292,7 @@ const Invoices = () => {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(11);
     doc.text("Grand Total", pageWidth - 75, finalY + 17);
-    doc.text(`₹${invoice.total_amount.toFixed(2)}`, pageWidth - 18, finalY + 17, { align: 'right' });
+    doc.text(`Rs. ${invoice.total_amount.toFixed(2)}`, pageWidth - 18, finalY + 17, { align: 'right' });
     
     // Amount in words
     const numberToWords = (num: number): string => {
