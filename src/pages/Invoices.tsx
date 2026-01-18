@@ -175,152 +175,168 @@ const Invoices = () => {
     }
 
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
     
-    // Modern header with gradient effect (simulated with colors)
-    doc.setFillColor(155, 81, 224); // Primary purple
-    doc.rect(0, 0, 210, 45, 'F');
-    
-    // Company name
+    // Tax Invoice badge (top right)
+    doc.setFillColor(155, 81, 224);
+    doc.rect(pageWidth - 50, 10, 40, 12, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(28);
-    doc.setFont(undefined, 'bold');
-    doc.text("MAHADEV TRADERS", 105, 20, { align: "center" });
-    
     doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    doc.text("Business Management System", 105, 28, { align: "center" });
-    
-    // Invoice badge
-    doc.setFillColor(251, 146, 60); // Accent orange
-    doc.roundedRect(15, 10, 35, 12, 3, 3, 'F');
-    doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
-    doc.text("INVOICE", 32.5, 17, { align: "center" });
+    doc.text("Tax Invoice", pageWidth - 30, 18, { align: "center" });
     
-    // Reset text color
+    // Company header
     doc.setTextColor(0, 0, 0);
-    
-    // Invoice details section
-    doc.setFillColor(245, 245, 250);
-    doc.roundedRect(15, 55, 180, 35, 3, 3, 'F');
+    doc.setFontSize(24);
+    doc.setFont(undefined, 'bold');
+    doc.text("MAHADEV TRADERS", 15, 20);
     
     doc.setFontSize(9);
-    doc.setTextColor(100, 100, 120);
-    doc.text("Invoice Details", 20, 62);
-    
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, 'bold');
-    doc.text("Invoice ID:", 20, 70);
     doc.setFont(undefined, 'normal');
-    doc.text(`#${invoice.id.substring(0, 8).toUpperCase()}`, 60, 70);
+    doc.setTextColor(80, 80, 80);
+    doc.text("Business Management System", 15, 27);
+    doc.text("e-mail: contact@mahadevtraders.com, Ph. 9876543210", 15, 32);
     
-    doc.setFont(undefined, 'bold');
-    doc.text("Date:", 20, 78);
-    doc.setFont(undefined, 'normal');
-    doc.text(new Date(invoice.invoice_date).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    }), 60, 78);
+    // Purple line under header
+    doc.setDrawColor(155, 81, 224);
+    doc.setLineWidth(1);
+    doc.line(15, 38, pageWidth - 15, 38);
     
-    doc.setFont(undefined, 'bold');
-    doc.text("Payment:", 20, 86);
-    doc.setFont(undefined, 'normal');
-    
-    // Payment type badge
-    const paymentColors: Record<string, number[]> = {
-      'Cash': [34, 197, 94],
-      'Online': [59, 130, 246],
-      'Pending': [251, 146, 60]
-    };
-    const color = paymentColors[invoice.payment_type] || [100, 100, 120];
-    doc.setFillColor(color[0], color[1], color[2], 0.1);
-    doc.roundedRect(58, 81, 25, 7, 2, 2, 'F');
-    doc.setTextColor(color[0], color[1], color[2]);
-    doc.text(invoice.payment_type, 60, 86);
-    doc.setTextColor(0, 0, 0);
-    
-    // Customer section
-    doc.setFontSize(9);
-    doc.setTextColor(100, 100, 120);
-    doc.text("Customer Details", 120, 62);
-    
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, 'bold');
-    const customerName = invoice.customers?.name || invoice.customer_name || 'Unknown';
+    // Customer and Invoice details section
+    const customerName = invoice.customers?.name || invoice.customer_name || 'Walk-in Customer';
     const customerMobile = invoice.customers?.mobile_number || invoice.customer_mobile || '-';
-    doc.text(customerName, 120, 70);
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(10);
-    doc.text(`Mobile: ${customerMobile}`, 120, 78);
+    const invoiceDate = new Date(invoice.invoice_date).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    const invoiceNo = invoice.id.substring(0, 8).toUpperCase();
     
-    // Items table with modern styling
+    // Left side - Customer details box
+    doc.setFillColor(240, 235, 248);
+    doc.rect(15, 42, 100, 25, 'F');
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.text("Client Name :", 18, 50);
+    doc.text("Mobile", 18, 57);
+    doc.text("Payment", 18, 64);
+    doc.setFont(undefined, 'normal');
+    doc.text(customerName, 50, 50);
+    doc.text(`: ${customerMobile}`, 38, 57);
+    doc.text(`: ${invoice.payment_type}`, 42, 64);
+    
+    // Right side - Date and Invoice No
+    doc.setFont(undefined, 'bold');
+    doc.text("Date", pageWidth - 70, 50);
+    doc.text("Invoice No", pageWidth - 70, 57);
+    doc.setFont(undefined, 'normal');
+    doc.text(`: ${invoiceDate}`, pageWidth - 50, 50);
+    doc.text(`: ${invoiceNo}`, pageWidth - 50, 57);
+    
+    // Items table with professional styling
     autoTable(doc, {
-      startY: 100,
-      head: [['Item Name', 'Qty', 'Unit', 'Price (Rs.)', 'Amount (Rs.)']],
-      body: items.map((item: InvoiceItem) => [
+      startY: 75,
+      head: [['S.No', 'Description', 'Qty', 'Unit', 'Rate', 'Amount']],
+      body: items.map((item: InvoiceItem, index: number) => [
+        (index + 1).toString(),
         item.item_name,
         item.quantity.toString(),
         item.unit_type,
-        'Rs. ' + item.price.toFixed(2),
-        'Rs. ' + item.subtotal.toFixed(2)
+        `₹${item.price.toFixed(2)}`,
+        `₹${item.subtotal.toFixed(2)}`
       ]),
-      foot: [['', '', '', 'Total Amount:', 'Rs. ' + invoice.total_amount.toFixed(2)]],
       theme: 'grid',
       headStyles: {
         fillColor: [155, 81, 224],
         textColor: [255, 255, 255],
-        fontSize: 11,
+        fontSize: 10,
         fontStyle: 'bold',
-        halign: 'center'
+        halign: 'center',
+        cellPadding: 4
       },
       bodyStyles: {
         fontSize: 10,
-        cellPadding: 5
-      },
-      footStyles: {
-        fillColor: [34, 197, 94],
-        textColor: [255, 255, 255],
-        fontSize: 12,
-        fontStyle: 'bold',
-        halign: 'right'
+        cellPadding: 4,
+        textColor: [0, 0, 0]
       },
       alternateRowStyles: {
-        fillColor: [250, 250, 252]
+        fillColor: [250, 248, 255]
       },
       columnStyles: {
-        0: { cellWidth: 70 },
-        1: { halign: 'center', cellWidth: 20 },
-        2: { halign: 'center', cellWidth: 25 },
-        3: { halign: 'right', cellWidth: 35 },
-        4: { halign: 'right', cellWidth: 35, fontStyle: 'bold' }
-      }
+        0: { halign: 'center', cellWidth: 15 },
+        1: { cellWidth: 70 },
+        2: { halign: 'center', cellWidth: 20 },
+        3: { halign: 'center', cellWidth: 25 },
+        4: { halign: 'right', cellWidth: 30 },
+        5: { halign: 'right', cellWidth: 30, fontStyle: 'bold' }
+      },
+      margin: { left: 15, right: 15 }
     });
 
-    // Footer section
-    const finalY = (doc as any).lastAutoTable.finalY || 200;
+    // Summary section
+    const finalY = (doc as any).lastAutoTable.finalY || 150;
     
-    // Thank you message
-    doc.setFillColor(245, 245, 250);
-    doc.roundedRect(15, finalY + 15, 180, 20, 3, 3, 'F');
+    // Total value row
+    doc.setFillColor(240, 235, 248);
+    doc.rect(pageWidth - 80, finalY, 65, 8, 'F');
     doc.setFontSize(10);
-    doc.setTextColor(100, 100, 120);
-    doc.text("Thank you for your business!", 105, finalY + 25, { align: "center" });
-    doc.setFontSize(8);
-    doc.text("For any queries, please contact us", 105, finalY + 30, { align: "center" });
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text("Total Value", pageWidth - 75, finalY + 6);
+    doc.text(`₹${invoice.total_amount.toFixed(2)}`, pageWidth - 18, finalY + 6, { align: 'right' });
     
-    // Company footer
-    doc.setFontSize(7);
-    doc.setTextColor(150, 150, 160);
-    doc.text("Generated by Mahadev Traders Business Management System", 105, 285, { align: "center" });
+    // Grand Total row
+    doc.setFillColor(155, 81, 224);
+    doc.rect(pageWidth - 80, finalY + 10, 65, 10, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(11);
+    doc.text("Grand Total", pageWidth - 75, finalY + 17);
+    doc.text(`₹${invoice.total_amount.toFixed(2)}`, pageWidth - 18, finalY + 17, { align: 'right' });
+    
+    // Amount in words
+    const numberToWords = (num: number): string => {
+      const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+      const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+      
+      if (num === 0) return 'Zero';
+      if (num < 20) return ones[num];
+      if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 ? ' ' + ones[num % 10] : '');
+      if (num < 1000) return ones[Math.floor(num / 100)] + ' Hundred' + (num % 100 ? ' ' + numberToWords(num % 100) : '');
+      if (num < 100000) return numberToWords(Math.floor(num / 1000)) + ' Thousand' + (num % 1000 ? ' ' + numberToWords(num % 1000) : '');
+      if (num < 10000000) return numberToWords(Math.floor(num / 100000)) + ' Lakh' + (num % 100000 ? ' ' + numberToWords(num % 100000) : '');
+      return numberToWords(Math.floor(num / 10000000)) + ' Crore' + (num % 10000000 ? ' ' + numberToWords(num % 10000000) : '');
+    };
+    
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.text("Amount in Words:", 15, finalY + 35);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Rupees ${numberToWords(Math.floor(invoice.total_amount))} Only`, 55, finalY + 35);
+    
+    // Company signature section
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.text("For MAHADEV TRADERS", pageWidth - 60, finalY + 50);
+    
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
+    doc.text("Authorised Signature", pageWidth - 55, finalY + 70);
+    
+    // Footer
+    doc.setDrawColor(155, 81, 224);
+    doc.setLineWidth(0.5);
+    doc.line(15, 280, pageWidth - 15, 280);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Thank you for your business!", 105, 286, { align: "center" });
 
-    doc.save(`Invoice-${customerName.replace(/\s+/g, '-')}-${invoice.id.substring(0, 8)}.pdf`);
+    doc.save(`Invoice-${customerName.replace(/\s+/g, '-')}-${invoiceNo}.pdf`);
     
     toast({
       title: "Success",
-      description: "Professional invoice PDF downloaded"
+      description: "Tax Invoice PDF downloaded"
     });
   };
 
