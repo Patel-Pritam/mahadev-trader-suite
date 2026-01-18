@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TopNav } from "@/components/TopNav";
-import { Store, ArrowLeft, Plus, FileText, Download, Pencil, Trash2, MessageCircle } from "lucide-react";
+import { Store, ArrowLeft, Plus, FileText, Download, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -137,70 +137,6 @@ const Invoices = () => {
     
     setDeleteDialogOpen(false);
     setInvoiceToDelete(null);
-  };
-
-  const handleSendWhatsApp = async (invoice: Invoice) => {
-    const { data: items, error } = await supabase
-      .from("invoice_items")
-      .select("*")
-      .eq("invoice_id", invoice.id);
-
-    if (error || !items) {
-      toast({
-        title: "Error",
-        description: "Failed to load invoice items",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const customerName = invoice.customers?.name || invoice.customer_name || 'Customer';
-    const customerMobile = invoice.customers?.mobile_number || invoice.customer_mobile || '';
-    
-    // Format invoice date
-    const invoiceDate = new Date(invoice.invoice_date).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-
-    // Build items list
-    const itemsList = items.map((item: InvoiceItem, index: number) => 
-      `${index + 1}. ${item.item_name} - ${item.quantity} ${item.unit_type} x Rs.${item.price.toFixed(2)} = Rs.${item.subtotal.toFixed(2)}`
-    ).join('\n');
-
-    // Create WhatsApp message
-    const message = `
-🧾 *INVOICE*
-━━━━━━━━━━━━━━━
-📅 Date: ${invoiceDate}
-🔖 Invoice ID: #${invoice.id.substring(0, 8).toUpperCase()}
-
-👤 *Customer:* ${customerName}
-💳 *Payment:* ${invoice.payment_type}
-
-📦 *Items:*
-${itemsList}
-
-━━━━━━━━━━━━━━━
-💰 *Total Amount: Rs.${invoice.total_amount.toFixed(2)}*
-━━━━━━━━━━━━━━━
-
-Thank you for your business! 🙏
-    `.trim();
-
-    // Clean mobile number (remove any spaces or dashes)
-    const cleanMobile = customerMobile.replace(/[\s-]/g, '');
-    const phoneNumber = cleanMobile.startsWith('+91') ? cleanMobile : `+91${cleanMobile}`;
-    
-    // Open WhatsApp with pre-filled message
-    const whatsappUrl = `https://wa.me/${phoneNumber.replace('+', '')}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-
-    toast({
-      title: "WhatsApp Opened",
-      description: "Invoice details ready to send"
-    });
   };
 
   const handleShowSummary = async (invoice: Invoice) => {
@@ -515,15 +451,6 @@ Thank you for your business! 🙏
                               className="hover:bg-primary/10 hover:text-primary"
                             >
                               <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleSendWhatsApp(invoice)}
-                              title="Send via WhatsApp"
-                              className="hover:bg-green-500/10 hover:text-green-500"
-                            >
-                              <MessageCircle className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
