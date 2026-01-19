@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Store, ArrowLeft, Plus, Trash2, Save } from "lucide-react";
+import { Store, ArrowLeft, Plus, Trash2, Save, FileText, FileCheck } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { z } from "zod";
@@ -56,6 +57,7 @@ const CreateInvoice = () => {
   const [newCustomerName, setNewCustomerName] = useState("");
   const [newCustomerMobile, setNewCustomerMobile] = useState("");
   const [paymentType, setPaymentType] = useState<"Online" | "Cash" | "Pending">("Cash");
+  const [documentType, setDocumentType] = useState<"Invoice" | "Quotation">("Invoice");
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   const [showItemDialog, setShowItemDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -305,13 +307,14 @@ const CreateInvoice = () => {
         customerId = newCustomer.id;
       }
 
-      // Create invoice (customer details stored in customers table, not duplicated here)
+      // Create invoice/quotation (customer details stored in customers table, not duplicated here)
       const { data: invoice, error: invoiceError } = await supabase
         .from("invoices")
         .insert([{
           user_id: user.id,
           customer_id: customerId,
           payment_type: paymentType,
+          document_type: documentType,
           total_amount: calculateTotal()
         }])
         .select()
@@ -336,18 +339,20 @@ const CreateInvoice = () => {
 
         if (itemError) throw itemError;
 
-        // Update stock quantity atomically to prevent race conditions
-        const { error: stockError } = await supabase.rpc('decrement_stock', {
-          _stock_item_id: item.stock_item_id,
-          _quantity: item.quantity
-        });
+        // Update stock quantity atomically to prevent race conditions (only for Invoices, not Quotations)
+        if (documentType === "Invoice") {
+          const { error: stockError } = await supabase.rpc('decrement_stock', {
+            _stock_item_id: item.stock_item_id,
+            _quantity: item.quantity
+          });
 
-        if (stockError) throw stockError;
+          if (stockError) throw stockError;
+        }
       }
 
       toast({
         title: "Success!",
-        description: "Invoice created successfully"
+        description: `${documentType} created successfully`
       });
 
       navigate("/invoices");
@@ -378,11 +383,32 @@ const CreateInvoice = () => {
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
               <Store className="w-6 h-6 text-primary-foreground" />
             </div>
-            <h1 className="text-xl font-bold">Create Invoice</h1>
+            <h1 className="text-xl font-bold">Create {documentType}</h1>
           </div>
           <ThemeToggle />
         </div>
       </header>
+
+      {/* Document Type Selection */}
+      <div className="container mx-auto px-4 pt-6 max-w-4xl">
+        <Tabs value={documentType} onValueChange={(value) => setDocumentType(value as "Invoice" | "Quotation")} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="Invoice" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Invoice
+            </TabsTrigger>
+            <TabsTrigger value="Quotation" className="flex items-center gap-2">
+              <FileCheck className="h-4 w-4" />
+              Quotation
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        {documentType === "Quotation" && (
+          <p className="text-sm text-muted-foreground mt-2 text-center">
+            Quotations don't deduct stock. Convert to invoice when confirmed.
+          </p>
+        )}
+      </div>
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="space-y-6">
@@ -472,10 +498,10 @@ const CreateInvoice = () => {
             </CardContent>
           </Card>
 
-          {/* Invoice Items */}
+          {/* Invoice/Quotation Items */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Invoice Items</CardTitle>
+              <CardTitle>{documentType} Items</CardTitle>
               <Button onClick={() => setShowItemDialog(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Item
@@ -559,7 +585,7 @@ const CreateInvoice = () => {
             className="w-full"
           >
             <Save className="mr-2 h-5 w-5" />
-            {saving ? "Saving..." : "Save Invoice"}
+            {saving ? "Saving..." : `Save ${documentType}`}
           </Button>
         </div>
       </main>

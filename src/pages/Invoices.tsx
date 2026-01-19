@@ -21,6 +21,7 @@ interface Invoice {
   customer_name: string | null; // Deprecated - for old invoices only
   customer_mobile: string | null; // Deprecated - for old invoices only
   payment_type: string;
+  document_type: string;
   total_amount: number;
   invoice_date: string;
   customers: {
@@ -60,7 +61,11 @@ const Invoices = () => {
         .order('invoice_date', { ascending: false });
 
       if (error) throw error;
-      return data as Invoice[];
+      // Add default document_type for old invoices that might not have it
+      return (data || []).map((inv: any) => ({
+        ...inv,
+        document_type: inv.document_type || 'Invoice'
+      })) as Invoice[];
     },
     staleTime: 30000,
     gcTime: 300000,
@@ -176,14 +181,16 @@ const Invoices = () => {
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const documentType = invoice.document_type || 'Invoice';
+    const isQuotation = documentType === 'Quotation';
     
-    // Tax Invoice badge (top right)
-    doc.setFillColor(155, 81, 224);
+    // Document type badge (top right)
+    doc.setFillColor(isQuotation ? 59 : 155, isQuotation ? 130 : 81, isQuotation ? 246 : 224);
     doc.rect(pageWidth - 50, 10, 40, 12, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
-    doc.text("Tax Invoice", pageWidth - 30, 18, { align: "center" });
+    doc.text(isQuotation ? "Quotation" : "Tax Invoice", pageWidth - 30, 18, { align: "center" });
     
     // Company header
     doc.setTextColor(0, 0, 0);
@@ -210,7 +217,7 @@ const Invoices = () => {
       month: '2-digit',
       year: 'numeric'
     });
-    const invoiceNo = invoice.id.substring(0, 8).toUpperCase();
+    const docNo = invoice.id.substring(0, 8).toUpperCase();
     
     // Left side - Customer details box
     doc.setFillColor(240, 235, 248);
@@ -226,13 +233,13 @@ const Invoices = () => {
     doc.text(`: ${customerMobile}`, 38, 57);
     doc.text(`: ${invoice.payment_type}`, 42, 64);
     
-    // Right side - Date and Invoice No
+    // Right side - Date and Invoice/Quotation No
     doc.setFont(undefined, 'bold');
     doc.text("Date", pageWidth - 70, 50);
-    doc.text("Invoice No", pageWidth - 70, 57);
+    doc.text(isQuotation ? "Quote No" : "Invoice No", pageWidth - 70, 57);
     doc.setFont(undefined, 'normal');
     doc.text(`: ${invoiceDate}`, pageWidth - 50, 50);
-    doc.text(`: ${invoiceNo}`, pageWidth - 50, 57);
+    doc.text(`: ${docNo}`, pageWidth - 50, 57);
     
     // Items table with professional styling
     autoTable(doc, {
@@ -332,11 +339,11 @@ const Invoices = () => {
     doc.setTextColor(100, 100, 100);
     doc.text("Thank you for your business!", 105, 286, { align: "center" });
 
-    doc.save(`Invoice-${customerName.replace(/\s+/g, '-')}-${invoiceNo}.pdf`);
+    doc.save(`${documentType}-${customerName.replace(/\s+/g, '-')}-${docNo}.pdf`);
     
     toast({
       title: "Success",
-      description: "Tax Invoice PDF downloaded"
+      description: `${documentType} PDF downloaded`
     });
   };
 
@@ -358,7 +365,7 @@ const Invoices = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Invoices
+                Invoices & Quotations
               </h1>
               <p className="text-xs text-muted-foreground">Manage billing & payments</p>
             </div>
@@ -373,10 +380,10 @@ const Invoices = () => {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
             <div>
               <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-                Invoice History
+                Documents
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                {invoices.length} invoices generated
+                {invoices.length} documents generated
               </p>
             </div>
             <Button 
@@ -413,6 +420,7 @@ const Invoices = () => {
                   <TableHeader>
                     <TableRow className="bg-muted/30 hover:bg-muted/50">
                       <TableHead className="font-bold">Date</TableHead>
+                      <TableHead className="font-bold">Type</TableHead>
                       <TableHead className="font-bold">Customer</TableHead>
                       <TableHead className="font-bold">Mobile</TableHead>
                       <TableHead className="font-bold">Payment</TableHead>
@@ -433,6 +441,15 @@ const Invoices = () => {
                             month: 'short',
                             year: 'numeric'
                           })}
+                        </TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            invoice.document_type === 'Quotation'
+                              ? 'bg-violet-500/10 text-violet-600 dark:text-violet-400'
+                              : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                          }`}>
+                            {invoice.document_type || 'Invoice'}
+                          </span>
                         </TableCell>
                         <TableCell 
                           className="font-medium cursor-pointer hover:text-primary transition-colors"
@@ -521,18 +538,28 @@ const Invoices = () => {
       <Dialog open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Invoice Summary</DialogTitle>
+            <DialogTitle>{selectedInvoice?.document_type || 'Invoice'} Summary</DialogTitle>
           </DialogHeader>
           {selectedInvoice && (
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Invoice Date</p>
+                  <p className="text-sm text-muted-foreground">Date</p>
                   <p className="font-medium">{new Date(selectedInvoice.invoice_date).toLocaleDateString()}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Invoice ID</p>
+                  <p className="text-sm text-muted-foreground">{selectedInvoice.document_type || 'Invoice'} ID</p>
                   <p className="font-medium">{selectedInvoice.id.substring(0, 8).toUpperCase()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Type</p>
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs ${
+                    selectedInvoice.document_type === 'Quotation'
+                      ? 'bg-violet-500/10 text-violet-600'
+                      : 'bg-blue-500/10 text-blue-600'
+                  }`}>
+                    {selectedInvoice.document_type || 'Invoice'}
+                  </span>
                 </div>
                 <div>
                    <p className="text-sm text-muted-foreground">Customer Name</p>
