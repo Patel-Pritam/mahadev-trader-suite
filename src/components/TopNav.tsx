@@ -1,5 +1,5 @@
 import { NavLink } from "@/components/NavLink";
-import { Package, FileText, Users, BarChart } from "lucide-react";
+import { Package, FileText, Users, BarChart, Settings } from "lucide-react";
 
 export const TopNav = () => {
   return (
@@ -37,6 +37,14 @@ export const TopNav = () => {
           >
             <BarChart className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform" />
             <span>Reports</span>
+          </NavLink>
+          <NavLink
+            to="/settings"
+            className="group flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-300 border-b-2 border-transparent hover:bg-muted/50 rounded-t-lg"
+            activeClassName="text-foreground border-foreground bg-muted/50"
+          >
+            <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform" />
+            <span>Settings</span>
           </NavLink>
         </div>
       </div>
