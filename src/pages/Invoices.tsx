@@ -221,7 +221,7 @@ const Invoices = () => {
     
     // Left side - Customer details box
     doc.setFillColor(240, 235, 248);
-    doc.rect(15, 42, 95, 25, 'F');
+    doc.rect(15, 42, 85, 25, 'F');
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
@@ -237,9 +237,9 @@ const Invoices = () => {
     doc.setFont(undefined, 'normal');
     doc.text(`: ${invoice.payment_type}`, 40, 64);
     
-    // Right side - Date and Invoice/Quotation No
-    const rightColLabel = 115;
-    const rightColValue = 140;
+    // Right side - Date and Invoice/Quotation No (closer to left section)
+    const rightColLabel = 105;
+    const rightColValue = 128;
     doc.setFont(undefined, 'bold');
     doc.text("Date", rightColLabel, 50);
     doc.setFont(undefined, 'normal');
