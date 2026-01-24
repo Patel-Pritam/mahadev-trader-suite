@@ -22,12 +22,19 @@ interface Invoice {
   customer_mobile: string | null; // Deprecated - for old invoices only
   payment_type: string;
   document_type: string;
+  include_gst: boolean;
   total_amount: number;
   invoice_date: string;
   customers: {
     name: string;
     mobile_number: string;
   } | null;
+}
+
+interface Profile {
+  business_name: string;
+  gst_number: string | null;
+  business_address: string | null;
 }
 
 interface InvoiceItem {
@@ -64,11 +71,26 @@ const Invoices = () => {
       // Add default document_type for old invoices that might not have it
       return (data || []).map((inv: any) => ({
         ...inv,
-        document_type: inv.document_type || 'Invoice'
+        document_type: inv.document_type || 'Invoice',
+        include_gst: inv.include_gst || false
       })) as Invoice[];
     },
     staleTime: 30000,
     gcTime: 300000,
+  });
+
+  // Fetch profile for business info
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('business_name, gst_number, business_address')
+        .single();
+
+      if (error) throw error;
+      return data as Profile;
+    },
   });
 
   // Realtime subscription
@@ -183,6 +205,7 @@ const Invoices = () => {
     const pageWidth = doc.internal.pageSize.getWidth();
     const documentType = invoice.document_type || 'Invoice';
     const isQuotation = documentType === 'Quotation';
+    const showGst = invoice.include_gst && profile?.gst_number;
     
     // Document type badge (top right)
     doc.setFillColor(isQuotation ? 59 : 155, isQuotation ? 130 : 81, isQuotation ? 246 : 224);
@@ -196,18 +219,30 @@ const Invoices = () => {
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(24);
     doc.setFont(undefined, 'bold');
-    doc.text("MAHADEV TRADERS", 15, 20);
+    doc.text(profile?.business_name || "MAHADEV TRADERS", 15, 20);
     
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
     doc.setTextColor(80, 80, 80);
-    doc.text("Business Management System", 15, 27);
-    doc.text("e-mail: contact@mahadevtraders.com, Ph. 9876543210", 15, 32);
+    
+    let headerY = 27;
+    if (profile?.business_address) {
+      doc.text(profile.business_address, 15, headerY);
+      headerY += 5;
+    }
+    
+    if (showGst) {
+      doc.setFont(undefined, 'bold');
+      doc.text(`GSTIN: ${profile.gst_number}`, 15, headerY);
+      doc.setFont(undefined, 'normal');
+      headerY += 5;
+    }
     
     // Purple line under header
+    const lineY = Math.max(headerY + 3, 38);
     doc.setDrawColor(155, 81, 224);
     doc.setLineWidth(1);
-    doc.line(15, 38, pageWidth - 15, 38);
+    doc.line(15, lineY, pageWidth - 15, lineY);
     
     // Customer and Invoice details section
     const customerName = invoice.customers?.name || invoice.customer_name || 'Walk-in Customer';
@@ -220,38 +255,40 @@ const Invoices = () => {
     const docNo = invoice.id.substring(0, 8).toUpperCase();
     
     // Left side - Customer details box
+    const customerBoxY = lineY + 4;
     doc.setFillColor(240, 235, 248);
-    doc.rect(15, 42, 85, 25, 'F');
+    doc.rect(15, customerBoxY, 85, 25, 'F');
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
-    doc.text("Client Name :", 18, 50);
+    doc.text("Client Name :", 18, customerBoxY + 8);
     doc.setFont(undefined, 'normal');
-    doc.text(customerName, 52, 50);
+    doc.text(customerName, 52, customerBoxY + 8);
     doc.setFont(undefined, 'bold');
-    doc.text("Mobile", 18, 57);
+    doc.text("Mobile", 18, customerBoxY + 15);
     doc.setFont(undefined, 'normal');
-    doc.text(`: ${customerMobile}`, 36, 57);
+    doc.text(`: ${customerMobile}`, 36, customerBoxY + 15);
     doc.setFont(undefined, 'bold');
-    doc.text("Payment", 18, 64);
+    doc.text("Payment", 18, customerBoxY + 22);
     doc.setFont(undefined, 'normal');
-    doc.text(`: ${invoice.payment_type}`, 40, 64);
+    doc.text(`: ${invoice.payment_type}`, 40, customerBoxY + 22);
     
     // Right side - Date and Invoice/Quotation No (closer to left section)
     const rightColLabel = 105;
     const rightColValue = 128;
     doc.setFont(undefined, 'bold');
-    doc.text("Date", rightColLabel, 50);
+    doc.text("Date", rightColLabel, customerBoxY + 8);
     doc.setFont(undefined, 'normal');
-    doc.text(`: ${invoiceDate}`, rightColValue, 50);
+    doc.text(`: ${invoiceDate}`, rightColValue, customerBoxY + 8);
     doc.setFont(undefined, 'bold');
-    doc.text(isQuotation ? "Quote No" : "Invoice No", rightColLabel, 57);
+    doc.text(isQuotation ? "Quote No" : "Invoice No", rightColLabel, customerBoxY + 15);
     doc.setFont(undefined, 'normal');
-    doc.text(`: ${docNo}`, rightColValue, 57);
+    doc.text(`: ${docNo}`, rightColValue, customerBoxY + 15);
     
     // Items table with professional styling
+    const tableStartY = customerBoxY + 33;
     autoTable(doc, {
-      startY: 75,
+      startY: tableStartY,
       head: [['S.No', 'Description', 'Qty', 'Unit', 'Rate', 'Amount']],
       body: items.map((item: InvoiceItem, index: number) => [
         (index + 1).toString(),

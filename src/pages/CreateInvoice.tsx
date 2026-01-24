@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Store, ArrowLeft, Plus, Trash2, Save, FileText, FileCheck } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { z } from "zod";
@@ -58,10 +59,12 @@ const CreateInvoice = () => {
   const [newCustomerMobile, setNewCustomerMobile] = useState("");
   const [paymentType, setPaymentType] = useState<"Online" | "Cash" | "Pending">("Cash");
   const [documentType, setDocumentType] = useState<"Invoice" | "Quotation">("Invoice");
+  const [includeGst, setIncludeGst] = useState(false);
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   const [showItemDialog, setShowItemDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState<{ gst_number?: string; business_address?: string } | null>(null);
 
   useEffect(() => {
     checkAuthAndFetchData();
@@ -97,6 +100,7 @@ const CreateInvoice = () => {
     }
     fetchCustomers();
     fetchStockItems();
+    fetchProfile();
   };
 
   const fetchCustomers = async () => {
@@ -118,6 +122,17 @@ const CreateInvoice = () => {
 
     if (!error && data) {
       setStockItems(data);
+    }
+  };
+
+  const fetchProfile = async () => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("gst_number, business_address")
+      .single();
+
+    if (!error && data) {
+      setProfile(data);
     }
   };
 
@@ -315,6 +330,7 @@ const CreateInvoice = () => {
           customer_id: customerId,
           payment_type: paymentType,
           document_type: documentType,
+          include_gst: includeGst,
           total_amount: calculateTotal()
         }])
         .select()
@@ -495,6 +511,23 @@ const CreateInvoice = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* GST Toggle - Only show if profile has GST number */}
+              {profile?.gst_number && (
+                <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="include-gst" className="text-base font-medium">Include GST</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Show GST number on this {documentType.toLowerCase()}
+                    </p>
+                  </div>
+                  <Switch
+                    id="include-gst"
+                    checked={includeGst}
+                    onCheckedChange={setIncludeGst}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 

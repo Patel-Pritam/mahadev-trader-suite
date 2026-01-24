@@ -100,6 +100,7 @@ export type Database = {
           customer_name: string | null
           document_type: string
           id: string
+          include_gst: boolean
           invoice_date: string
           payment_type: string
           total_amount: number
@@ -113,6 +114,7 @@ export type Database = {
           customer_name?: string | null
           document_type?: string
           id?: string
+          include_gst?: boolean
           invoice_date?: string
           payment_type: string
           total_amount: number
@@ -126,6 +128,7 @@ export type Database = {
           customer_name?: string | null
           document_type?: string
           id?: string
+          include_gst?: boolean
           invoice_date?: string
           payment_type?: string
           total_amount?: number
@@ -144,22 +147,28 @@ export type Database = {
       }
       profiles: {
         Row: {
+          business_address: string | null
           business_name: string
           created_at: string
+          gst_number: string | null
           id: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          business_address?: string | null
           business_name: string
           created_at?: string
+          gst_number?: string | null
           id?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          business_address?: string | null
           business_name?: string
           created_at?: string
+          gst_number?: string | null
           id?: string
           updated_at?: string
           user_id?: string
