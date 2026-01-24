@@ -221,25 +221,33 @@ const Invoices = () => {
     
     // Left side - Customer details box
     doc.setFillColor(240, 235, 248);
-    doc.rect(15, 42, 100, 25, 'F');
+    doc.rect(15, 42, 95, 25, 'F');
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     doc.text("Client Name :", 18, 50);
+    doc.setFont(undefined, 'normal');
+    doc.text(customerName, 52, 50);
+    doc.setFont(undefined, 'bold');
     doc.text("Mobile", 18, 57);
+    doc.setFont(undefined, 'normal');
+    doc.text(`: ${customerMobile}`, 36, 57);
+    doc.setFont(undefined, 'bold');
     doc.text("Payment", 18, 64);
     doc.setFont(undefined, 'normal');
-    doc.text(customerName, 50, 50);
-    doc.text(`: ${customerMobile}`, 38, 57);
-    doc.text(`: ${invoice.payment_type}`, 42, 64);
+    doc.text(`: ${invoice.payment_type}`, 40, 64);
     
     // Right side - Date and Invoice/Quotation No
+    const rightColLabel = 115;
+    const rightColValue = 140;
     doc.setFont(undefined, 'bold');
-    doc.text("Date", pageWidth - 70, 50);
-    doc.text(isQuotation ? "Quote No" : "Invoice No", pageWidth - 70, 57);
+    doc.text("Date", rightColLabel, 50);
     doc.setFont(undefined, 'normal');
-    doc.text(`: ${invoiceDate}`, pageWidth - 50, 50);
-    doc.text(`: ${docNo}`, pageWidth - 50, 57);
+    doc.text(`: ${invoiceDate}`, rightColValue, 50);
+    doc.setFont(undefined, 'bold');
+    doc.text(isQuotation ? "Quote No" : "Invoice No", rightColLabel, 57);
+    doc.setFont(undefined, 'normal');
+    doc.text(`: ${docNo}`, rightColValue, 57);
     
     // Items table with professional styling
     autoTable(doc, {
@@ -283,23 +291,25 @@ const Invoices = () => {
 
     // Summary section
     const finalY = (doc as any).lastAutoTable.finalY || 150;
+    const summaryBoxWidth = 85;
+    const summaryStartX = pageWidth - summaryBoxWidth - 15;
     
     // Total value row
     doc.setFillColor(240, 235, 248);
-    doc.rect(pageWidth - 80, finalY, 65, 8, 'F');
+    doc.rect(summaryStartX, finalY + 5, summaryBoxWidth, 10, 'F');
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(0, 0, 0);
-    doc.text("Total Value", pageWidth - 75, finalY + 6);
-    doc.text(`Rs. ${invoice.total_amount.toFixed(2)}`, pageWidth - 18, finalY + 6, { align: 'right' });
+    doc.text("Total Value", summaryStartX + 5, finalY + 12);
+    doc.text(`Rs. ${invoice.total_amount.toFixed(2)}`, pageWidth - 18, finalY + 12, { align: 'right' });
     
     // Grand Total row
     doc.setFillColor(155, 81, 224);
-    doc.rect(pageWidth - 80, finalY + 10, 65, 10, 'F');
+    doc.rect(summaryStartX, finalY + 17, summaryBoxWidth, 12, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(11);
-    doc.text("Grand Total", pageWidth - 75, finalY + 17);
-    doc.text(`Rs. ${invoice.total_amount.toFixed(2)}`, pageWidth - 18, finalY + 17, { align: 'right' });
+    doc.text("Grand Total", summaryStartX + 5, finalY + 25);
+    doc.text(`Rs. ${invoice.total_amount.toFixed(2)}`, pageWidth - 18, finalY + 25, { align: 'right' });
     
     // Amount in words
     const numberToWords = (num: number): string => {
@@ -318,18 +328,18 @@ const Invoices = () => {
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
-    doc.text("Amount in Words:", 15, finalY + 35);
+    doc.text("Amount in Words:", 15, finalY + 45);
     doc.setFont(undefined, 'normal');
-    doc.text(`Rupees ${numberToWords(Math.floor(invoice.total_amount))} Only`, 55, finalY + 35);
+    doc.text(`Rupees ${numberToWords(Math.floor(invoice.total_amount))} Only`, 55, finalY + 45);
     
     // Company signature section
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
-    doc.text("For MAHADEV TRADERS", pageWidth - 60, finalY + 50);
+    doc.text("For MAHADEV TRADERS", pageWidth - 60, finalY + 60);
     
     doc.setFont(undefined, 'normal');
     doc.setFontSize(9);
-    doc.text("Authorised Signature", pageWidth - 55, finalY + 70);
+    doc.text("Authorised Signature", pageWidth - 55, finalY + 80);
     
     // Footer
     doc.setDrawColor(155, 81, 224);
