@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TopNav } from "@/components/TopNav";
-import { Store, ArrowLeft, Save, Building2 } from "lucide-react";
+import { Store, ArrowLeft, Save, Building2, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
@@ -121,7 +121,24 @@ const Settings = () => {
               <p className="text-xs text-muted-foreground">Business profile & preferences</p>
             </div>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={async () => {
+                await supabase.auth.signOut();
+                toast({
+                  title: "Logged out",
+                  description: "You have been successfully logged out.",
+                });
+                navigate("/auth");
+              }}
+              className="hover:bg-destructive/10 hover:text-destructive transition-all duration-300"
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </header>
       <TopNav />
