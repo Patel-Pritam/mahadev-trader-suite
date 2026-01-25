@@ -207,44 +207,38 @@ const Invoices = () => {
     const isQuotation = documentType === 'Quotation';
     const showGst = invoice.include_gst && profile?.gst_number;
     
-    // Document type badge (top right)
-    doc.setFillColor(isQuotation ? 59 : 155, isQuotation ? 130 : 81, isQuotation ? 246 : 224);
-    doc.rect(pageWidth - 50, 10, 40, 12, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'bold');
-    doc.text(isQuotation ? "Quotation" : "Tax Invoice", pageWidth - 30, 18, { align: "center" });
-    
-    // Company header
+    // Simple header - Business name
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(24);
+    doc.setFontSize(18);
     doc.setFont(undefined, 'bold');
-    doc.text(profile?.business_name || "MAHADEV TRADERS", 15, 20);
+    doc.text(profile?.business_name || "MAHADEV TRADERS", pageWidth / 2, 18, { align: "center" });
     
+    // Business address and GST
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
-    doc.setTextColor(80, 80, 80);
-    
-    let headerY = 27;
+    let headerY = 25;
     if (profile?.business_address) {
-      doc.text(profile.business_address, 15, headerY);
+      doc.text(profile.business_address, pageWidth / 2, headerY, { align: "center" });
       headerY += 5;
     }
-    
     if (showGst) {
-      doc.setFont(undefined, 'bold');
-      doc.text(`GSTIN: ${profile.gst_number}`, 15, headerY);
-      doc.setFont(undefined, 'normal');
+      doc.text(`GSTIN: ${profile.gst_number}`, pageWidth / 2, headerY, { align: "center" });
       headerY += 5;
     }
     
-    // Purple line under header
-    const lineY = Math.max(headerY + 3, 38);
-    doc.setDrawColor(155, 81, 224);
-    doc.setLineWidth(1);
-    doc.line(15, lineY, pageWidth - 15, lineY);
+    // Document type title
+    headerY += 3;
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text(isQuotation ? "QUOTATION" : "TAX INVOICE", pageWidth / 2, headerY, { align: "center" });
     
-    // Customer and Invoice details section
+    // Simple line
+    headerY += 5;
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.line(15, headerY, pageWidth - 15, headerY);
+    
+    // Customer and Invoice details
     const customerName = invoice.customers?.name || invoice.customer_name || 'Walk-in Customer';
     const customerMobile = invoice.customers?.mobile_number || invoice.customer_mobile || '-';
     const invoiceDate = new Date(invoice.invoice_date).toLocaleDateString('en-IN', {
@@ -254,38 +248,38 @@ const Invoices = () => {
     });
     const docNo = invoice.id.substring(0, 8).toUpperCase();
     
-    // Left side - Customer details box
-    const customerBoxY = lineY + 4;
-    doc.setFillColor(240, 235, 248);
-    doc.rect(15, customerBoxY, 85, 25, 'F');
-    doc.setTextColor(0, 0, 0);
+    const detailsY = headerY + 8;
     doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    doc.text("Client Name", 18, customerBoxY + 8);
-    doc.setFont(undefined, 'normal');
-    doc.text(`: ${customerName}`, 42, customerBoxY + 8);
-    doc.setFont(undefined, 'bold');
-    doc.text("Mobile", 18, customerBoxY + 15);
-    doc.setFont(undefined, 'normal');
-    doc.text(`: ${customerMobile}`, 33, customerBoxY + 15);
-    doc.setFont(undefined, 'bold');
-    doc.text("Payment", 18, customerBoxY + 22);
-    doc.setFont(undefined, 'normal');
-    doc.text(`: ${invoice.payment_type}`, 36, customerBoxY + 22);
     
-    // Right side - Date and Invoice/Quotation No (tighter spacing)
-    const rightColLabel = 105;
+    // Left side - Customer details
     doc.setFont(undefined, 'bold');
-    doc.text("Date", rightColLabel, customerBoxY + 8);
+    doc.text("Customer", 15, detailsY);
     doc.setFont(undefined, 'normal');
-    doc.text(`: ${invoiceDate}`, 115, customerBoxY + 8);
-    doc.setFont(undefined, 'bold');
-    doc.text(isQuotation ? "Quote No" : "Invoice No", rightColLabel, customerBoxY + 15);
-    doc.setFont(undefined, 'normal');
-    doc.text(`: ${docNo}`, isQuotation ? 122 : 125, customerBoxY + 15);
+    doc.text(`: ${customerName}`, 35, detailsY);
     
-    // Items table with professional styling
-    const tableStartY = customerBoxY + 33;
+    doc.setFont(undefined, 'bold');
+    doc.text("Mobile", 15, detailsY + 6);
+    doc.setFont(undefined, 'normal');
+    doc.text(`: ${customerMobile}`, 35, detailsY + 6);
+    
+    doc.setFont(undefined, 'bold');
+    doc.text("Payment", 15, detailsY + 12);
+    doc.setFont(undefined, 'normal');
+    doc.text(`: ${invoice.payment_type}`, 35, detailsY + 12);
+    
+    // Right side - Date and Invoice No
+    doc.setFont(undefined, 'bold');
+    doc.text("Date", 130, detailsY);
+    doc.setFont(undefined, 'normal');
+    doc.text(`: ${invoiceDate}`, 145, detailsY);
+    
+    doc.setFont(undefined, 'bold');
+    doc.text(isQuotation ? "Quote No" : "Invoice No", 130, detailsY + 6);
+    doc.setFont(undefined, 'normal');
+    doc.text(`: ${docNo}`, isQuotation ? 150 : 155, detailsY + 6);
+    
+    // Items table - simple black and white
+    const tableStartY = detailsY + 22;
     autoTable(doc, {
       startY: tableStartY,
       head: [['S.No', 'Description', 'Qty', 'Unit', 'Rate', 'Amount']],
@@ -297,22 +291,23 @@ const Invoices = () => {
         `Rs. ${item.price.toFixed(2)}`,
         `Rs. ${item.subtotal.toFixed(2)}`
       ]),
-      theme: 'grid',
+      theme: 'plain',
       headStyles: {
-        fillColor: [155, 81, 224],
-        textColor: [255, 255, 255],
+        fillColor: [255, 255, 255],
+        textColor: [0, 0, 0],
         fontSize: 10,
         fontStyle: 'bold',
         halign: 'center',
-        cellPadding: 4
+        cellPadding: 3,
+        lineWidth: 0.3,
+        lineColor: [0, 0, 0]
       },
       bodyStyles: {
         fontSize: 10,
-        cellPadding: 4,
-        textColor: [0, 0, 0]
-      },
-      alternateRowStyles: {
-        fillColor: [250, 248, 255]
+        cellPadding: 3,
+        textColor: [0, 0, 0],
+        lineWidth: 0.1,
+        lineColor: [150, 150, 150]
       },
       columnStyles: {
         0: { halign: 'center', cellWidth: 15 },
@@ -320,32 +315,25 @@ const Invoices = () => {
         2: { halign: 'center', cellWidth: 20 },
         3: { halign: 'center', cellWidth: 25 },
         4: { halign: 'right', cellWidth: 30 },
-        5: { halign: 'right', cellWidth: 30, fontStyle: 'bold' }
+        5: { halign: 'right', cellWidth: 30 }
       },
       margin: { left: 15, right: 15 }
     });
 
-    // Summary section
+    // Total section
     const finalY = (doc as any).lastAutoTable.finalY || 150;
-    const summaryBoxWidth = 85;
-    const summaryStartX = pageWidth - summaryBoxWidth - 15;
     
-    // Total value row
-    doc.setFillColor(240, 235, 248);
-    doc.rect(summaryStartX, finalY + 5, summaryBoxWidth, 10, 'F');
-    doc.setFontSize(10);
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+    doc.line(pageWidth - 100, finalY + 5, pageWidth - 15, finalY + 5);
+    
+    doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text("Total Value", summaryStartX + 5, finalY + 12);
+    doc.text("Total:", pageWidth - 95, finalY + 12);
     doc.text(`Rs. ${invoice.total_amount.toFixed(2)}`, pageWidth - 18, finalY + 12, { align: 'right' });
     
-    // Grand Total row
-    doc.setFillColor(155, 81, 224);
-    doc.rect(summaryStartX, finalY + 17, summaryBoxWidth, 12, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(11);
-    doc.text("Grand Total", summaryStartX + 5, finalY + 25);
-    doc.text(`Rs. ${invoice.total_amount.toFixed(2)}`, pageWidth - 18, finalY + 25, { align: 'right' });
+    doc.setLineWidth(0.5);
+    doc.line(pageWidth - 100, finalY + 16, pageWidth - 15, finalY + 16);
     
     // Amount in words
     const numberToWords = (num: number): string => {
@@ -361,29 +349,15 @@ const Invoices = () => {
       return numberToWords(Math.floor(num / 10000000)) + ' Crore' + (num % 10000000 ? ' ' + numberToWords(num % 10000000) : '');
     };
     
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    doc.text("Amount in Words:", 15, finalY + 45);
-    doc.setFont(undefined, 'normal');
-    doc.text(`Rupees ${numberToWords(Math.floor(invoice.total_amount))} Only`, 55, finalY + 45);
-    
-    // Company signature section
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    doc.text("For MAHADEV TRADERS", pageWidth - 60, finalY + 60);
-    
-    doc.setFont(undefined, 'normal');
     doc.setFontSize(9);
-    doc.text("Authorised Signature", pageWidth - 55, finalY + 80);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Amount in Words: Rupees ${numberToWords(Math.floor(invoice.total_amount))} Only`, 15, finalY + 28);
     
-    // Footer
-    doc.setDrawColor(155, 81, 224);
-    doc.setLineWidth(0.5);
-    doc.line(15, 280, pageWidth - 15, 280);
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text("Thank you for your business!", 105, 286, { align: "center" });
+    // Signature
+    doc.setFontSize(9);
+    doc.text("Authorised Signature", pageWidth - 50, finalY + 55);
+    doc.setLineWidth(0.3);
+    doc.line(pageWidth - 70, finalY + 50, pageWidth - 20, finalY + 50);
 
     doc.save(`${documentType}-${customerName.replace(/\s+/g, '-')}-${docNo}.pdf`);
     
