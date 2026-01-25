@@ -261,29 +261,28 @@ const Invoices = () => {
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
-    doc.text("Client Name :", 18, customerBoxY + 8);
+    doc.text("Client Name", 18, customerBoxY + 8);
     doc.setFont(undefined, 'normal');
-    doc.text(customerName, 52, customerBoxY + 8);
+    doc.text(`: ${customerName}`, 42, customerBoxY + 8);
     doc.setFont(undefined, 'bold');
     doc.text("Mobile", 18, customerBoxY + 15);
     doc.setFont(undefined, 'normal');
-    doc.text(`: ${customerMobile}`, 36, customerBoxY + 15);
+    doc.text(`: ${customerMobile}`, 33, customerBoxY + 15);
     doc.setFont(undefined, 'bold');
     doc.text("Payment", 18, customerBoxY + 22);
     doc.setFont(undefined, 'normal');
-    doc.text(`: ${invoice.payment_type}`, 40, customerBoxY + 22);
+    doc.text(`: ${invoice.payment_type}`, 36, customerBoxY + 22);
     
-    // Right side - Date and Invoice/Quotation No (closer to left section)
+    // Right side - Date and Invoice/Quotation No (tighter spacing)
     const rightColLabel = 105;
-    const rightColValue = 128;
     doc.setFont(undefined, 'bold');
     doc.text("Date", rightColLabel, customerBoxY + 8);
     doc.setFont(undefined, 'normal');
-    doc.text(`: ${invoiceDate}`, rightColValue, customerBoxY + 8);
+    doc.text(`: ${invoiceDate}`, 115, customerBoxY + 8);
     doc.setFont(undefined, 'bold');
     doc.text(isQuotation ? "Quote No" : "Invoice No", rightColLabel, customerBoxY + 15);
     doc.setFont(undefined, 'normal');
-    doc.text(`: ${docNo}`, rightColValue, customerBoxY + 15);
+    doc.text(`: ${docNo}`, isQuotation ? 122 : 125, customerBoxY + 15);
     
     // Items table with professional styling
     const tableStartY = customerBoxY + 33;
