@@ -4,8 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { Store, Package, FileText, Users, TrendingUp, LogOut, Settings } from "lucide-react";
+import { Store, Package, FileText, Users, TrendingUp, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
@@ -125,7 +124,6 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 animate-fade-in">
-            <ThemeToggle />
             <Button 
               variant="ghost" 
               size="icon" 
@@ -133,14 +131,6 @@ const Dashboard = () => {
               className="hover:bg-primary/10 hover:text-primary transition-all duration-300"
             >
               <Settings className="h-5 w-5" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={handleSignOut}
-              className="hover:bg-destructive/10 hover:text-destructive transition-all duration-300"
-            >
-              <LogOut className="h-5 w-5" />
             </Button>
           </div>
         </div>
