@@ -60,16 +60,7 @@ const Settings = () => {
     setLoading(false);
   };
 
-  const handleSave = async () => {
-    if (!businessName.trim()) {
-      toast({
-        title: "Error",
-        description: "Business name is required",
-        variant: "destructive"
-      });
-      return;
-    }
-
+  const handleSave = async (skipBusinessValidation = false) => {
     setSaving(true);
     
     const { data: { user } } = await supabase.auth.getUser();
@@ -78,28 +69,60 @@ const Settings = () => {
       return;
     }
 
-    // Try update first, if no rows affected, insert
+    // Check if profile exists
     const { data: existingProfile } = await supabase
       .from("profiles")
-      .select("id")
+      .select("id, business_name")
       .eq("user_id", user.id)
       .single();
 
     let error;
     if (existingProfile) {
+      // Profile exists - update it
+      // For language/notification saves, we don't need to update business_name
+      const updateData = skipBusinessValidation 
+        ? {
+            language_preference: languagePreference,
+            notifications_enabled: notificationsEnabled,
+            email_notifications: emailNotifications,
+            sms_notifications: smsNotifications
+          }
+        : {
+            business_name: businessName.trim(),
+            gst_number: gstNumber.trim() || null,
+            business_address: businessAddress.trim() || null,
+            language_preference: languagePreference,
+            notifications_enabled: notificationsEnabled,
+            email_notifications: emailNotifications,
+            sms_notifications: smsNotifications
+          };
+
+      if (!skipBusinessValidation && !businessName.trim()) {
+        toast({
+          title: "Error",
+          description: "Business name is required",
+          variant: "destructive"
+        });
+        setSaving(false);
+        return;
+      }
+
       ({ error } = await supabase
         .from("profiles")
-        .update({
-          business_name: businessName.trim(),
-          gst_number: gstNumber.trim() || null,
-          business_address: businessAddress.trim() || null,
-          language_preference: languagePreference,
-          notifications_enabled: notificationsEnabled,
-          email_notifications: emailNotifications,
-          sms_notifications: smsNotifications
-        })
+        .update(updateData)
         .eq("user_id", user.id));
     } else {
+      // Profile doesn't exist - need business name to create it
+      if (!businessName.trim()) {
+        toast({
+          title: "Setup Required",
+          description: "Please set up your Business Profile first before saving preferences",
+          variant: "destructive"
+        });
+        setSaving(false);
+        return;
+      }
+
       ({ error } = await supabase
         .from("profiles")
         .insert({
@@ -235,7 +258,7 @@ const Settings = () => {
                   </div>
 
                   <Button 
-                    onClick={handleSave} 
+                    onClick={() => handleSave()}
                     disabled={saving}
                     variant="gradient"
                     className="w-full"
@@ -327,7 +350,7 @@ const Settings = () => {
                       </Select>
                     </div>
                     <Button 
-                      onClick={handleSave} 
+                      onClick={() => handleSave(true)}
                       disabled={saving}
                       variant="gradient"
                       className="w-full"
@@ -399,7 +422,7 @@ const Settings = () => {
                     )}
                     
                     <Button 
-                      onClick={handleSave} 
+                      onClick={() => handleSave(true)}
                       disabled={saving}
                       variant="gradient"
                       className="w-full"
