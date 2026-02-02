@@ -150,8 +150,12 @@ export type Database = {
           business_address: string | null
           business_name: string
           created_at: string
+          email_notifications: boolean
           gst_number: string | null
           id: string
+          language_preference: string
+          notifications_enabled: boolean
+          sms_notifications: boolean
           updated_at: string
           user_id: string
         }
@@ -159,8 +163,12 @@ export type Database = {
           business_address?: string | null
           business_name: string
           created_at?: string
+          email_notifications?: boolean
           gst_number?: string | null
           id?: string
+          language_preference?: string
+          notifications_enabled?: boolean
+          sms_notifications?: boolean
           updated_at?: string
           user_id: string
         }
@@ -168,8 +176,12 @@ export type Database = {
           business_address?: string | null
           business_name?: string
           created_at?: string
+          email_notifications?: boolean
           gst_number?: string | null
           id?: string
+          language_preference?: string
+          notifications_enabled?: boolean
+          sms_notifications?: boolean
           updated_at?: string
           user_id?: string
         }
