@@ -112,11 +112,14 @@ const Settings = () => {
         .update(updateData)
         .eq("user_id", user.id));
     } else {
-      // Profile doesn't exist - need business name to create it
-      if (!businessName.trim()) {
+      // Profile doesn't exist - create it
+      // For language/notification saves, use default business name if not provided
+      const profileBusinessName = businessName.trim() || "My Business";
+      
+      if (!skipBusinessValidation && !businessName.trim()) {
         toast({
-          title: "Setup Required",
-          description: "Please set up your Business Profile first before saving preferences",
+          title: "Error",
+          description: "Business name is required",
           variant: "destructive"
         });
         setSaving(false);
@@ -127,7 +130,7 @@ const Settings = () => {
         .from("profiles")
         .insert({
           user_id: user.id,
-          business_name: businessName.trim(),
+          business_name: profileBusinessName,
           gst_number: gstNumber.trim() || null,
           business_address: businessAddress.trim() || null,
           language_preference: languagePreference,
@@ -135,6 +138,11 @@ const Settings = () => {
           email_notifications: emailNotifications,
           sms_notifications: smsNotifications
         }));
+      
+      // Update local state if we used default name
+      if (skipBusinessValidation && !businessName.trim()) {
+        setBusinessName(profileBusinessName);
+      }
     }
 
     setSaving(false);
