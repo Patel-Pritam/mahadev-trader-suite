@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store, Package, FileText, Users, TrendingUp, Settings } from "lucide-react";
+import { Store, Package, FileText, Users, TrendingUp, Settings, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { StockRefillDialog } from "@/components/StockRefillDialog";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -228,6 +229,29 @@ const Dashboard = () => {
               </p>
             </CardContent>
           </Card>
+
+          {/* Stock Refill Quick Action */}
+          <StockRefillDialog onRefillComplete={fetchDashboardData}>
+            <Card 
+              className="group hover:shadow-elegant transition-all duration-500 cursor-pointer border-2 hover:border-primary/50 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm animate-fade-in hover:-translate-y-1 border-dashed"
+              style={{ animationDelay: '0.5s' }}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-semibold">Quick Refill</CardTitle>
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <RefreshCw className="h-5 w-5 text-primary" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-lg font-medium text-primary">
+                  Add Stock
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Quickly refill inventory
+                </p>
+              </CardContent>
+            </Card>
+          </StockRefillDialog>
         </div>
       </main>
     </div>
