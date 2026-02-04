@@ -10,15 +10,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Plus } from "lucide-react";
+import { RefreshCw, Plus, Search } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface StockItem {
   id: string;
@@ -40,10 +34,14 @@ export const StockRefillDialog = ({ children, onRefillComplete }: StockRefillDia
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [refillQuantity, setRefillQuantity] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   useEffect(() => {
     if (open) {
       fetchStockItems();
+      setSearchQuery("");
+      setSelectedItemId("");
+      setRefillQuantity("");
     }
   }, [open]);
 
@@ -59,6 +57,14 @@ export const StockRefillDialog = ({ children, onRefillComplete }: StockRefillDia
   };
 
   const selectedItem = stockItems.find(item => item.id === selectedItemId);
+
+  const filteredItems = stockItems.filter(item =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleSelectItem = (itemId: string) => {
+    setSelectedItemId(itemId);
+  };
 
   const handleRefill = async () => {
     if (!selectedItemId || !refillQuantity) {
@@ -106,6 +112,7 @@ export const StockRefillDialog = ({ children, onRefillComplete }: StockRefillDia
       setOpen(false);
       setSelectedItemId("");
       setRefillQuantity("");
+      setSearchQuery("");
       onRefillComplete?.();
     }
   };
@@ -122,35 +129,50 @@ export const StockRefillDialog = ({ children, onRefillComplete }: StockRefillDia
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="stock-item">Select Item</Label>
-            <Select value={selectedItemId} onValueChange={setSelectedItemId}>
-              <SelectTrigger id="stock-item">
-                <SelectValue placeholder="Choose an item to refill" />
-              </SelectTrigger>
-              <SelectContent>
-                {stockItems.length === 0 ? (
-                  <SelectItem value="none" disabled>
-                    No items in stock
-                  </SelectItem>
-                ) : (
-                  stockItems.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.name} (Current: {item.quantity} {item.unit_type})
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+            <Label>Search & Select Item</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search items..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
           </div>
+
+          <ScrollArea className="h-40 rounded-md border">
+            <div className="p-2 space-y-1">
+              {filteredItems.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  {stockItems.length === 0 ? "No items in stock" : "No items match your search"}
+                </p>
+              ) : (
+                filteredItems.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => handleSelectItem(item.id)}
+                    className={`p-2 rounded-md cursor-pointer transition-colors ${
+                      selectedItemId === item.id
+                        ? "bg-primary/10 border border-primary/30"
+                        : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <p className="font-medium text-sm">{item.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Stock: {item.quantity} {item.unit_type} • ₹{item.price.toLocaleString('en-IN')}/{item.unit_type}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+          </ScrollArea>
 
           {selectedItem && (
             <div className="rounded-lg bg-muted/50 p-3 space-y-1">
-              <p className="text-sm font-medium">{selectedItem.name}</p>
+              <p className="text-sm font-medium">Selected: {selectedItem.name}</p>
               <p className="text-xs text-muted-foreground">
                 Current Stock: {selectedItem.quantity} {selectedItem.unit_type}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Price: ₹{selectedItem.price.toLocaleString('en-IN')} per {selectedItem.unit_type}
               </p>
             </div>
           )}
