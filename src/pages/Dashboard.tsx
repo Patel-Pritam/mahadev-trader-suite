@@ -157,7 +157,7 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold gradient-primary bg-clip-text text-transparent">
+              <div className="text-3xl font-bold text-primary">
                 ₹{stockValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
@@ -178,7 +178,7 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold gradient-primary bg-clip-text text-transparent">
+              <div className="text-3xl font-bold text-secondary">
                 ₹{invoiceTotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
@@ -199,7 +199,7 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold gradient-accent bg-clip-text text-transparent">
+              <div className="text-3xl font-bold text-accent">
                 ₹{customerTotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
@@ -220,7 +220,7 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold gradient-success bg-clip-text text-transparent">
+              <div className="text-3xl font-bold text-success">
                 ₹{totalSales.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
