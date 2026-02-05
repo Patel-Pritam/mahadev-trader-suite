@@ -37,6 +37,7 @@ const Stock = () => {
   const [open, setOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     price: "",
@@ -228,8 +229,8 @@ const Stock = () => {
       <main className="container mx-auto px-4 py-8">
         <Card className="shadow-card border-2 border-primary/10 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
           <CardHeader className="space-y-4 pb-6">
-            <div className="flex flex-row items-center justify-between">
-              <div>
+            <div className="flex flex-row items-center justify-between gap-3">
+              <div className="flex-1">
                 <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
                   Stock Items
                 </CardTitle>
@@ -237,88 +238,105 @@ const Stock = () => {
                   {items.length} items in inventory
                 </p>
               </div>
-              <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger asChild>
-                  <Button 
-                    onClick={() => { resetForm(); setOpen(true); }}
-                    variant="gradient"
-                    size="lg"
-                    className="shadow-elegant"
-                  >
-                    <Plus className="mr-2 h-5 w-5" />
-                    Add Item
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="border-2 border-primary/20 shadow-elegant">
-                <DialogHeader>
-                  <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                    {editingItem ? "Edit Item" : "Add New Item"}
-                  </DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="font-semibold">Item Name</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                      className="border-2 focus:border-primary/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="price" className="font-semibold">Price (₹)</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      required
-                      className="border-2 focus:border-primary/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity" className="font-semibold">Quantity</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      step="0.01"
-                      value={formData.quantity}
-                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                      required
-                      className="border-2 focus:border-primary/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="unit_type" className="font-semibold">Unit Type</Label>
-                    <Select value={formData.unit_type} onValueChange={(value) => setFormData({ ...formData, unit_type: value })}>
-                      <SelectTrigger className="border-2">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Kg">Kg (Kilogram)</SelectItem>
-                        <SelectItem value="Qty">Qty (Quantity)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button type="submit" variant="gradient" className="w-full" size="lg">
-                    {editingItem ? "Update" : "Add"} Item
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search stock items..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardHeader>
+              
+              {/* Collapsible Search */}
+              <div className="flex items-center gap-2">
+                <div className={`flex items-center transition-all duration-300 overflow-hidden ${
+                  searchOpen ? 'w-48 sm:w-64' : 'w-0'
+                }`}>
+                  <Input
+                    placeholder="Search items..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="border-2 focus:border-primary/50"
+                    autoFocus={searchOpen}
+                  />
+                </div>
+                <Button
+                  variant={searchOpen ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => {
+                    setSearchOpen(!searchOpen);
+                    if (searchOpen) setSearchTerm("");
+                  }}
+                  className={`flex-shrink-0 ${searchOpen ? 'bg-primary text-primary-foreground' : ''}`}
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+
+                <Dialog open={open} onOpenChange={setOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      onClick={() => { resetForm(); setOpen(true); }}
+                      variant="gradient"
+                      className="shadow-elegant flex-shrink-0"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Item
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="border-2 border-primary/20 shadow-elegant bg-background">
+                    <DialogHeader>
+                      <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                        {editingItem ? "Edit Item" : "Add New Item"}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name" className="font-semibold">Item Name</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          required
+                          className="border-2 focus:border-primary/50"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="price" className="font-semibold">Price (₹)</Label>
+                        <Input
+                          id="price"
+                          type="number"
+                          step="0.01"
+                          value={formData.price}
+                          onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                          required
+                          className="border-2 focus:border-primary/50"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="quantity" className="font-semibold">Quantity</Label>
+                        <Input
+                          id="quantity"
+                          type="number"
+                          step="0.01"
+                          value={formData.quantity}
+                          onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                          required
+                          className="border-2 focus:border-primary/50"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="unit_type" className="font-semibold">Unit Type</Label>
+                        <Select value={formData.unit_type} onValueChange={(value) => setFormData({ ...formData, unit_type: value })}>
+                          <SelectTrigger className="border-2">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background border shadow-lg z-50">
+                            <SelectItem value="Kg">Kg (Kilogram)</SelectItem>
+                            <SelectItem value="Qty">Qty (Quantity)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button type="submit" variant="gradient" className="w-full" size="lg">
+                        {editingItem ? "Update" : "Add"} Item
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          </CardHeader>
           <CardContent>
             {loading ? (
               <div className="text-center py-12">
