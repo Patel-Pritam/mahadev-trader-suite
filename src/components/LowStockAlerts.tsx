@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, Package } from "lucide-react";
+import { AlertTriangle, Package, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 interface LowStockItem {
   id: string;
@@ -19,8 +21,11 @@ interface LowStockAlertsProps {
 
 export const LowStockAlerts = ({ threshold = 10, onRefresh }: LowStockAlertsProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refillAmounts, setRefillAmounts] = useState<Record<string, string>>({});
+  const [refilling, setRefilling] = useState<string | null>(null);
 
   useEffect(() => {
     fetchLowStockItems();
@@ -71,6 +76,45 @@ export const LowStockAlerts = ({ threshold = 10, onRefresh }: LowStockAlertsProp
     return null;
   }
 
+  const handleQuickRefill = async (item: LowStockItem) => {
+    const amount = parseFloat(refillAmounts[item.id] || "0");
+    if (isNaN(amount) || amount <= 0) {
+      toast({
+        title: "Invalid quantity",
+        description: "Please enter a valid quantity to add",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setRefilling(item.id);
+    const { error } = await supabase
+      .from("stock_items")
+      .update({ 
+        quantity: item.quantity + amount,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", item.id);
+
+    setRefilling(null);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to refill stock",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Stock Updated",
+        description: `Added ${amount} ${item.unit_type} to ${item.name}`,
+      });
+      setRefillAmounts(prev => ({ ...prev, [item.id]: "" }));
+      fetchLowStockItems();
+      onRefresh?.();
+    }
+  };
+
   const criticalItems = lowStockItems.filter(item => item.quantity <= 5);
   const warningItems = lowStockItems.filter(item => item.quantity > 5 && item.quantity <= threshold);
 
@@ -96,16 +140,37 @@ export const LowStockAlerts = ({ threshold = 10, onRefresh }: LowStockAlertsProp
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle className="font-semibold">Critical Stock Level!</AlertTitle>
           <AlertDescription>
-            <div className="mt-2 space-y-1">
+            <div className="mt-2 space-y-2">
               {criticalItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <Package className="h-3 w-3" />
-                    {item.name}
-                  </span>
-                  <span className="font-medium">
-                    {item.quantity} {item.unit_type} remaining
-                  </span>
+                <div key={item.id} className="flex items-center justify-between gap-2 text-sm bg-background/50 rounded-md p-2">
+                  <div className="flex-1 min-w-0">
+                    <span className="flex items-center gap-2">
+                      <Package className="h-3 w-3 flex-shrink-0" />
+                      <span className="truncate">{item.name}</span>
+                    </span>
+                    <span className="text-xs opacity-80">
+                      {item.quantity} {item.unit_type} left
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      min="1"
+                      placeholder="Qty"
+                      value={refillAmounts[item.id] || ""}
+                      onChange={(e) => setRefillAmounts(prev => ({ ...prev, [item.id]: e.target.value }))}
+                      className="w-16 h-7 text-xs"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 bg-background hover:bg-primary hover:text-primary-foreground"
+                      onClick={() => handleQuickRefill(item)}
+                      disabled={refilling === item.id}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -118,16 +183,37 @@ export const LowStockAlerts = ({ threshold = 10, onRefresh }: LowStockAlertsProp
           <AlertTriangle className="h-4 w-4 text-warning" />
           <AlertTitle className="font-semibold text-warning">Low Stock Warning</AlertTitle>
           <AlertDescription>
-            <div className="mt-2 space-y-1">
+            <div className="mt-2 space-y-2">
               {warningItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <Package className="h-3 w-3" />
-                    {item.name}
-                  </span>
-                  <span className="font-medium">
-                    {item.quantity} {item.unit_type} remaining
-                  </span>
+                <div key={item.id} className="flex items-center justify-between gap-2 text-sm bg-background/50 rounded-md p-2">
+                  <div className="flex-1 min-w-0">
+                    <span className="flex items-center gap-2">
+                      <Package className="h-3 w-3 flex-shrink-0" />
+                      <span className="truncate">{item.name}</span>
+                    </span>
+                    <span className="text-xs opacity-80">
+                      {item.quantity} {item.unit_type} left
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      min="1"
+                      placeholder="Qty"
+                      value={refillAmounts[item.id] || ""}
+                      onChange={(e) => setRefillAmounts(prev => ({ ...prev, [item.id]: e.target.value }))}
+                      className="w-16 h-7 text-xs"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 bg-background hover:bg-primary hover:text-primary-foreground"
+                      onClick={() => handleQuickRefill(item)}
+                      disabled={refilling === item.id}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
