@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Store, Package, FileText, Users, TrendingUp, Settings, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { StockRefillDialog } from "@/components/StockRefillDialog";
+import { LowStockAlerts } from "@/components/LowStockAlerts";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -252,6 +253,11 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </StockRefillDialog>
+        </div>
+
+        {/* Low Stock Alerts Section */}
+        <div className="mt-8 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+          <LowStockAlerts threshold={10} onRefresh={fetchDashboardData} />
         </div>
       </main>
     </div>
