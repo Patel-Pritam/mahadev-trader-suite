@@ -190,7 +190,7 @@ const Invoices = () => {
     setSummaryDialogOpen(true);
   };
 
-  const handleDownloadPDF = async (invoice: Invoice) => {
+  const handleDownloadPDF = async (invoice: Invoice, invoiceNumber?: string) => {
     const { data: items, error } = await supabase
       .from("invoice_items")
       .select("*")
@@ -250,7 +250,7 @@ const Invoices = () => {
       month: '2-digit',
       year: 'numeric'
     });
-    const docNo = invoice.id.substring(0, 8).toUpperCase();
+    const docNo = invoiceNumber || invoice.id.substring(0, 8).toUpperCase();
     
     const detailsY = headerY + 8;
     doc.setFontSize(10);
@@ -568,7 +568,7 @@ const Invoices = () => {
                                   <Pencil className="mr-2 h-4 w-4" />
                                   Edit
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDownloadPDF(invoice)}>
+                                <DropdownMenuItem onClick={() => handleDownloadPDF(invoice, invoiceNumber)}>
                                   <Download className="mr-2 h-4 w-4" />
                                   Download PDF
                                 </DropdownMenuItem>
