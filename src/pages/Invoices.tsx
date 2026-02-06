@@ -453,15 +453,27 @@ const Invoices = () => {
                 <p className="text-muted-foreground mt-4">Loading invoices...</p>
               </div>
             ) : (() => {
-              const filteredInvoices = invoices.filter(invoice => {
+              const filteredInvoices = invoices.filter((invoice, _, arr) => {
+                if (!searchTerm) return true;
                 const customerName = invoice.customers?.name || invoice.customer_name || '';
                 const customerMobile = invoice.customers?.mobile_number || invoice.customer_mobile || '';
                 const searchLower = searchTerm.toLowerCase();
+                const amount = invoice.total_amount.toFixed(2);
+                const date = new Date(invoice.invoice_date).toLocaleDateString('en-IN', {
+                  day: '2-digit', month: 'short', year: 'numeric'
+                }).toLowerCase();
+                // Calculate invoice number
+                const chronologicalIndex = arr.length - arr.indexOf(invoice);
+                const invoiceNumber = String(chronologicalIndex).padStart(4, '0');
                 return (
                   customerName.toLowerCase().includes(searchLower) ||
                   customerMobile.includes(searchTerm) ||
                   invoice.document_type?.toLowerCase().includes(searchLower) ||
-                  invoice.payment_type?.toLowerCase().includes(searchLower)
+                  invoice.payment_type?.toLowerCase().includes(searchLower) ||
+                  amount.includes(searchTerm) ||
+                  date.includes(searchLower) ||
+                  invoiceNumber.includes(searchTerm) ||
+                  `#${invoiceNumber}`.includes(searchTerm)
                 );
               });
 
