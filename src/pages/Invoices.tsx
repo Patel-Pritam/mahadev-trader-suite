@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TopNav } from "@/components/TopNav";
-import { Store, ArrowLeft, Plus, FileText, Download, Pencil, Trash2, Search } from "lucide-react";
+import { Store, ArrowLeft, Plus, FileText, Download, Pencil, Trash2, Search, MoreVertical, Eye } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -487,6 +488,7 @@ const Invoices = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/30 hover:bg-muted/50">
+                        <TableHead className="font-bold">Inv No.</TableHead>
                         <TableHead className="font-bold">Date</TableHead>
                         <TableHead className="font-bold">Type</TableHead>
                         <TableHead className="font-bold">Customer</TableHead>
@@ -497,12 +499,20 @@ const Invoices = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredInvoices.map((invoice, index) => (
+                      {filteredInvoices.map((invoice, index) => {
+                        // Calculate invoice number based on chronological order (oldest = 0001)
+                        const chronologicalIndex = invoices.length - invoices.indexOf(invoice);
+                        const invoiceNumber = String(chronologicalIndex).padStart(4, '0');
+                        
+                        return (
                         <TableRow 
                           key={invoice.id}
                           className="hover:bg-secondary/5 transition-colors animate-fade-in"
                           style={{ animationDelay: `${index * 0.05}s` }}
                         >
+                          <TableCell className="font-mono font-semibold text-primary">
+                            #{invoiceNumber}
+                          </TableCell>
                           <TableCell className="text-muted-foreground">
                             {new Date(invoice.invoice_date).toLocaleDateString('en-IN', {
                               day: '2-digit',
@@ -543,41 +553,41 @@ const Invoices = () => {
                             ₹{invoice.total_amount.toFixed(2)}
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex gap-1 justify-end">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => navigate(`/edit-invoice/${invoice.id}`)}
-                                title="Edit"
-                                className="hover:bg-primary/10 hover:text-primary"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDownloadPDF(invoice)}
-                                title="Download PDF"
-                                className="hover:bg-success/10 hover:text-success"
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  setInvoiceToDelete(invoice.id);
-                                  setDeleteDialogOpen(true);
-                                }}
-                                title="Delete"
-                                className="hover:bg-destructive/10 hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleShowSummary(invoice)}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate(`/edit-invoice/${invoice.id}`)}>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDownloadPDF(invoice)}>
+                                  <Download className="mr-2 h-4 w-4" />
+                                  Download PDF
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => {
+                                    setInvoiceToDelete(invoice.id);
+                                    setDeleteDialogOpen(true);
+                                  }}
+                                  className="text-destructive focus:text-destructive"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
-                      ))}
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
