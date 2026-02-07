@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TopNav } from "@/components/TopNav";
-import { Store, ArrowLeft, Plus, FileText, Download, Pencil, Trash2, Search, MoreVertical, Eye } from "lucide-react";
+import { Store, ArrowLeft, Plus, FileText, Download, Pencil, Trash2, Search, MoreVertical, Eye, CreditCard, Banknote, Clock } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -168,6 +168,27 @@ const Invoices = () => {
     
     setDeleteDialogOpen(false);
     setInvoiceToDelete(null);
+  };
+
+  const handleUpdatePaymentType = async (invoiceId: string, newPaymentType: string) => {
+    const { error } = await supabase
+      .from("invoices")
+      .update({ payment_type: newPaymentType })
+      .eq("id", invoiceId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update payment type",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Updated",
+        description: `Payment type changed to ${newPaymentType}`
+      });
+      refetch();
+    }
   };
 
   const handleShowSummary = async (invoice: Invoice) => {
@@ -551,15 +572,42 @@ const Invoices = () => {
                             {invoice.customers?.mobile_number || invoice.customer_mobile || '-'}
                           </TableCell>
                           <TableCell>
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              invoice.payment_type === 'Cash'
-                                ? 'bg-success/10 text-success' 
-                                : invoice.payment_type === 'Online'
-                                ? 'bg-primary/10 text-primary'
-                                : 'bg-accent/10 text-accent'
-                            }`}>
-                              {invoice.payment_type}
-                            </span>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className={`px-3 py-1 rounded-full text-xs font-semibold cursor-pointer hover:opacity-80 transition-opacity ${
+                                  invoice.payment_type === 'Cash'
+                                    ? 'bg-success/10 text-success' 
+                                    : invoice.payment_type === 'Online'
+                                    ? 'bg-primary/10 text-primary'
+                                    : 'bg-destructive/10 text-destructive'
+                                }`}>
+                                  {invoice.payment_type} ▾
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start">
+                                <DropdownMenuItem
+                                  onClick={() => handleUpdatePaymentType(invoice.id, 'Cash')}
+                                  disabled={invoice.payment_type === 'Cash'}
+                                >
+                                  <Banknote className="mr-2 h-4 w-4 text-success" />
+                                  Cash
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleUpdatePaymentType(invoice.id, 'Online')}
+                                  disabled={invoice.payment_type === 'Online'}
+                                >
+                                  <CreditCard className="mr-2 h-4 w-4 text-primary" />
+                                  Online
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleUpdatePaymentType(invoice.id, 'Pending')}
+                                  disabled={invoice.payment_type === 'Pending'}
+                                >
+                                  <Clock className="mr-2 h-4 w-4 text-destructive" />
+                                  Pending
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                           <TableCell className="text-right font-semibold text-success text-base">
                             ₹{invoice.total_amount.toFixed(2)}
