@@ -9,9 +9,11 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { TopNav } from "@/components/TopNav";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Store, ArrowLeft, TrendingUp, DollarSign, FileText, Clock, CalendarIcon, Download } from "lucide-react";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { Store, ArrowLeft, TrendingUp, DollarSign, FileText, Clock, CalendarIcon, Download, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { format, startOfMonth, endOfMonth, isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import { format, startOfMonth, endOfMonth, isWithinInterval, startOfDay, endOfDay, eachDayOfInterval } from "date-fns";
 import { cn } from "@/lib/utils";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -110,6 +112,31 @@ const Reports = () => {
       .reduce((sum, inv) => sum + Number(inv.total_amount), 0);
     return { totalSales, pendingPayments, cashPayments, onlinePayments, invoiceCount: filteredInvoices.length };
   }, [filteredInvoices]);
+
+  // Daily sales chart data
+  const dailySalesData = useMemo(() => {
+    const days = eachDayOfInterval({ start: startOfDay(dateFrom), end: endOfDay(dateTo) });
+    return days.map(day => {
+      const dayStr = format(day, 'yyyy-MM-dd');
+      const dayInvoices = filteredInvoices.filter(inv => format(new Date(inv.invoice_date), 'yyyy-MM-dd') === dayStr);
+      const cash = dayInvoices.filter(i => i.payment_type === 'Cash').reduce((s, i) => s + Number(i.total_amount), 0);
+      const online = dayInvoices.filter(i => i.payment_type === 'Online').reduce((s, i) => s + Number(i.total_amount), 0);
+      const pending = dayInvoices.filter(i => i.payment_type === 'Pending').reduce((s, i) => s + Number(i.total_amount), 0);
+      return {
+        date: format(day, 'dd MMM'),
+        cash,
+        online,
+        pending,
+        total: cash + online + pending,
+      };
+    });
+  }, [filteredInvoices, dateFrom, dateTo]);
+
+  const chartConfig = {
+    cash: { label: "Cash", color: "hsl(var(--success))" },
+    online: { label: "Online", color: "hsl(var(--primary))" },
+    pending: { label: "Pending", color: "hsl(var(--destructive))" },
+  };
 
   const handleDownloadPDF = () => {
     if (filteredInvoices.length === 0) {
@@ -367,6 +394,51 @@ const Reports = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Daily Sales Chart */}
+        <Card className="shadow-card border-2 border-secondary/10">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Daily Sales Trend
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="inline-block w-12 h-12 rounded-full border-4 border-secondary/20 border-t-secondary animate-spin" />
+              </div>
+            ) : dailySalesData.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">No data for selected period</p>
+            ) : (
+              <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                <BarChart data={dailySalesData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                    interval={dailySalesData.length > 15 ? Math.floor(dailySalesData.length / 10) : 0}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(v) => `₹${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
+                  />
+                  <ChartTooltip
+                    content={<ChartTooltipContent />}
+                    cursor={{ fill: 'hsl(var(--muted))' }}
+                  />
+                  <Bar dataKey="cash" stackId="sales" fill="var(--color-cash)" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="online" stackId="sales" fill="var(--color-online)" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="pending" stackId="sales" fill="var(--color-pending)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ChartContainer>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Invoices Table */}
         <Card className="shadow-card border-2 border-secondary/10">
