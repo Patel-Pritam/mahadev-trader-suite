@@ -7,12 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TopNav } from "@/components/TopNav";
-import { Store, ArrowLeft, Plus, FileText, Download, Pencil, Trash2, Search, MoreVertical, Eye, CreditCard, Banknote, Clock } from "lucide-react";
+import { Store, ArrowLeft, Plus, FileText, Download, Pencil, Trash2, Search, MoreVertical, Eye, CreditCard, Banknote, Clock, IndianRupee } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -20,12 +21,13 @@ import autoTable from "jspdf-autotable";
 interface Invoice {
   id: string;
   customer_id: string | null;
-  customer_name: string | null; // Deprecated - for old invoices only
-  customer_mobile: string | null; // Deprecated - for old invoices only
+  customer_name: string | null;
+  customer_mobile: string | null;
   payment_type: string;
   document_type: string;
   include_gst: boolean;
   total_amount: number;
+  paid_amount: number;
   invoice_date: string;
   customers: {
     name: string;
@@ -58,6 +60,9 @@ const Invoices = () => {
   const [selectedInvoiceItems, setSelectedInvoiceItems] = useState<InvoiceItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentInvoice, setPaymentInvoice] = useState<Invoice | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
 
   const { data: invoices = [], isLoading: loading, refetch } = useQuery({
     queryKey: ['invoices'],
@@ -170,25 +175,60 @@ const Invoices = () => {
     setInvoiceToDelete(null);
   };
 
-  const handleUpdatePaymentType = async (invoiceId: string, newPaymentType: string) => {
+  const handleUpdatePaymentType = async (invoiceId: string, newPaymentType: string, invoice: Invoice) => {
     const { error } = await supabase
       .from("invoices")
-      .update({ payment_type: newPaymentType })
+      .update({ payment_type: newPaymentType, paid_amount: invoice.total_amount })
       .eq("id", invoiceId);
 
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update payment type",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to update payment type", variant: "destructive" });
+    } else {
+      toast({ title: "Updated", description: `Payment marked as ${newPaymentType}` });
+      refetch();
+    }
+  };
+
+  const handleReceivePayment = async () => {
+    if (!paymentInvoice) return;
+    const amount = parseFloat(paymentAmount);
+    const pendingAmount = paymentInvoice.total_amount - (paymentInvoice.paid_amount || 0);
+
+    if (isNaN(amount) || amount <= 0) {
+      toast({ title: "Invalid amount", description: "Please enter a valid amount", variant: "destructive" });
+      return;
+    }
+    if (amount > pendingAmount) {
+      toast({ title: "Too much", description: `Amount cannot exceed pending ₹${pendingAmount.toFixed(2)}`, variant: "destructive" });
+      return;
+    }
+
+    const newPaidAmount = (paymentInvoice.paid_amount || 0) + amount;
+    const fullyPaid = newPaidAmount >= paymentInvoice.total_amount;
+
+    const { error } = await supabase
+      .from("invoices")
+      .update({
+        paid_amount: newPaidAmount,
+        ...(fullyPaid ? { payment_type: 'Cash' } : {}),
+      })
+      .eq("id", paymentInvoice.id);
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to record payment", variant: "destructive" });
     } else {
       toast({
-        title: "Updated",
-        description: `Payment type changed to ${newPaymentType}`
+        title: fullyPaid ? "Fully Paid" : "Payment Received",
+        description: fullyPaid
+          ? `Invoice fully paid - ₹${paymentInvoice.total_amount.toFixed(2)}`
+          : `₹${amount.toFixed(2)} received. Pending: ₹${(pendingAmount - amount).toFixed(2)}`
       });
       refetch();
     }
+
+    setPaymentDialogOpen(false);
+    setPaymentInvoice(null);
+    setPaymentAmount("");
   };
 
   const handleShowSummary = async (invoice: Invoice) => {
@@ -580,13 +620,21 @@ const Invoices = () => {
                                   </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="start">
-                                  <DropdownMenuItem onClick={() => handleUpdatePaymentType(invoice.id, 'Cash')}>
+                                  <DropdownMenuItem onClick={() => handleUpdatePaymentType(invoice.id, 'Cash', invoice)}>
                                     <Banknote className="mr-2 h-4 w-4 text-success" />
-                                    Cash
+                                    Paid - Cash
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleUpdatePaymentType(invoice.id, 'Online')}>
+                                  <DropdownMenuItem onClick={() => handleUpdatePaymentType(invoice.id, 'Online', invoice)}>
                                     <CreditCard className="mr-2 h-4 w-4 text-primary" />
-                                    Online
+                                    Paid - Online
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => {
+                                    setPaymentInvoice(invoice);
+                                    setPaymentAmount("");
+                                    setPaymentDialogOpen(true);
+                                  }}>
+                                    <IndianRupee className="mr-2 h-4 w-4 text-warning" />
+                                    Receive Partial Payment
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -598,6 +646,11 @@ const Invoices = () => {
                               }`}>
                                 {invoice.payment_type}
                               </span>
+                            )}
+                            {invoice.payment_type === 'Pending' && (invoice.paid_amount || 0) > 0 && (
+                              <div className="text-[10px] mt-1 text-muted-foreground">
+                                Paid: ₹{(invoice.paid_amount || 0).toFixed(2)} | Due: ₹{(invoice.total_amount - (invoice.paid_amount || 0)).toFixed(2)}
+                              </div>
                             )}
                           </TableCell>
                           <TableCell className="text-right font-semibold text-success text-base">
@@ -747,6 +800,60 @@ const Invoices = () => {
                   <p className="text-2xl font-bold">₹{selectedInvoice.total_amount.toFixed(2)}</p>
                 </div>
               </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Partial Payment Dialog */}
+      <Dialog open={paymentDialogOpen} onOpenChange={(open) => {
+        setPaymentDialogOpen(open);
+        if (!open) { setPaymentInvoice(null); setPaymentAmount(""); }
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Receive Payment</DialogTitle>
+            <DialogDescription>
+              Enter the amount received from the customer
+            </DialogDescription>
+          </DialogHeader>
+          {paymentInvoice && (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-muted/50 p-3 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total Amount:</span>
+                  <span className="font-semibold">₹{paymentInvoice.total_amount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Already Paid:</span>
+                  <span className="font-semibold text-success">₹{(paymentInvoice.paid_amount || 0).toFixed(2)}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground font-medium">Pending Amount:</span>
+                  <span className="font-bold text-destructive">₹{(paymentInvoice.total_amount - (paymentInvoice.paid_amount || 0)).toFixed(2)}</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="payment-amount">Amount Received (₹)</Label>
+                <Input
+                  id="payment-amount"
+                  type="number"
+                  placeholder="Enter amount..."
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  min="1"
+                  max={paymentInvoice.total_amount - (paymentInvoice.paid_amount || 0)}
+                  autoFocus
+                />
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleReceivePayment} variant="gradient">
+                  <IndianRupee className="mr-2 h-4 w-4" />
+                  Receive ₹{paymentAmount || '0'}
+                </Button>
+              </DialogFooter>
             </div>
           )}
         </DialogContent>

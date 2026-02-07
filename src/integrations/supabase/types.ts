@@ -102,6 +102,7 @@ export type Database = {
           id: string
           include_gst: boolean
           invoice_date: string
+          paid_amount: number
           payment_type: string
           total_amount: number
           updated_at: string
@@ -116,6 +117,7 @@ export type Database = {
           id?: string
           include_gst?: boolean
           invoice_date?: string
+          paid_amount?: number
           payment_type: string
           total_amount: number
           updated_at?: string
@@ -130,6 +132,7 @@ export type Database = {
           id?: string
           include_gst?: boolean
           invoice_date?: string
+          paid_amount?: number
           payment_type?: string
           total_amount?: number
           updated_at?: string
