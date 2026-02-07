@@ -572,42 +572,33 @@ const Invoices = () => {
                             {invoice.customers?.mobile_number || invoice.customer_mobile || '-'}
                           </TableCell>
                           <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button className={`px-3 py-1 rounded-full text-xs font-semibold cursor-pointer hover:opacity-80 transition-opacity ${
-                                  invoice.payment_type === 'Cash'
-                                    ? 'bg-success/10 text-success' 
-                                    : invoice.payment_type === 'Online'
-                                    ? 'bg-primary/10 text-primary'
-                                    : 'bg-destructive/10 text-destructive'
-                                }`}>
-                                  {invoice.payment_type} ▾
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="start">
-                                <DropdownMenuItem
-                                  onClick={() => handleUpdatePaymentType(invoice.id, 'Cash')}
-                                  disabled={invoice.payment_type === 'Cash'}
-                                >
-                                  <Banknote className="mr-2 h-4 w-4 text-success" />
-                                  Cash
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleUpdatePaymentType(invoice.id, 'Online')}
-                                  disabled={invoice.payment_type === 'Online'}
-                                >
-                                  <CreditCard className="mr-2 h-4 w-4 text-primary" />
-                                  Online
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleUpdatePaymentType(invoice.id, 'Pending')}
-                                  disabled={invoice.payment_type === 'Pending'}
-                                >
-                                  <Clock className="mr-2 h-4 w-4 text-destructive" />
-                                  Pending
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            {invoice.payment_type === 'Pending' ? (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button className="px-3 py-1 rounded-full text-xs font-semibold cursor-pointer hover:opacity-80 transition-opacity bg-destructive/10 text-destructive">
+                                    Pending ▾
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start">
+                                  <DropdownMenuItem onClick={() => handleUpdatePaymentType(invoice.id, 'Cash')}>
+                                    <Banknote className="mr-2 h-4 w-4 text-success" />
+                                    Cash
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleUpdatePaymentType(invoice.id, 'Online')}>
+                                    <CreditCard className="mr-2 h-4 w-4 text-primary" />
+                                    Online
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            ) : (
+                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                invoice.payment_type === 'Cash'
+                                  ? 'bg-success/10 text-success' 
+                                  : 'bg-primary/10 text-primary'
+                              }`}>
+                                {invoice.payment_type}
+                              </span>
+                            )}
                           </TableCell>
                           <TableCell className="text-right font-semibold text-success text-base">
                             ₹{invoice.total_amount.toFixed(2)}
