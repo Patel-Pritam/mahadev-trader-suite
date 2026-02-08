@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Textarea } from "@/components/ui/textarea";
 import { Store, ArrowLeft, Plus, Trash2, Save, FileText, FileCheck } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
@@ -63,6 +64,7 @@ const CreateInvoice = () => {
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   const [showItemDialog, setShowItemDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<{ gst_number?: string; business_address?: string } | null>(null);
 
@@ -331,7 +333,8 @@ const CreateInvoice = () => {
           payment_type: paymentType,
           document_type: documentType,
           include_gst: includeGst,
-          total_amount: calculateTotal()
+          total_amount: calculateTotal(),
+          customer_address: customerAddress.trim() || null
         }])
         .select()
         .single();
@@ -494,6 +497,18 @@ const CreateInvoice = () => {
                   </div>
                 </div>
               )}
+
+              <div className="space-y-2">
+                <Label htmlFor="customer-address">Address <span className="text-muted-foreground text-xs">(Optional)</span></Label>
+                <Textarea
+                  id="customer-address"
+                  value={customerAddress}
+                  onChange={(e) => setCustomerAddress(e.target.value)}
+                  placeholder="Enter customer address"
+                  rows={2}
+                  className="resize-none"
+                />
+              </div>
 
               <div className="space-y-2">
                 <Label>Payment Type</Label>
