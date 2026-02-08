@@ -20,7 +20,7 @@ const stockItemSchema = z.object({
   name: z.string().trim().min(1, "Item name is required").max(100, "Item name must be less than 100 characters"),
   price: z.number().positive("Price must be positive").max(999999.99, "Price must be less than 1,000,000"),
   quantity: z.number().nonnegative("Quantity cannot be negative").max(999999.99, "Quantity must be less than 1,000,000"),
-  unit_type: z.enum(["Kg", "Qty"], { errorMap: () => ({ message: "Please select a valid unit type" }) })
+  unit_type: z.enum(["Kg", "Qty", "L"], { errorMap: () => ({ message: "Please select a valid unit type" }) })
 });
 
 interface StockItem {
@@ -325,6 +325,7 @@ const Stock = () => {
                           <SelectContent className="bg-background border shadow-lg z-50">
                             <SelectItem value="Kg">Kg (Kilogram)</SelectItem>
                             <SelectItem value="Qty">Qty (Quantity)</SelectItem>
+                            <SelectItem value="L">L (Litre)</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
