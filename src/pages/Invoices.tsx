@@ -63,6 +63,7 @@ const Invoices = () => {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentInvoice, setPaymentInvoice] = useState<Invoice | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"Cash" | "Online">("Cash");
 
   const { data: invoices = [], isLoading: loading, refetch } = useQuery({
     queryKey: ['invoices'],
@@ -210,7 +211,7 @@ const Invoices = () => {
       .from("invoices")
       .update({
         paid_amount: newPaidAmount,
-        ...(fullyPaid ? { payment_type: 'Cash' } : {}),
+        ...(fullyPaid ? { payment_type: paymentMethod } : {}),
       })
       .eq("id", paymentInvoice.id);
 
@@ -808,7 +809,7 @@ const Invoices = () => {
       {/* Partial Payment Dialog */}
       <Dialog open={paymentDialogOpen} onOpenChange={(open) => {
         setPaymentDialogOpen(open);
-        if (!open) { setPaymentInvoice(null); setPaymentAmount(""); }
+        if (!open) { setPaymentInvoice(null); setPaymentAmount(""); setPaymentMethod("Cash"); }
       }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -846,6 +847,27 @@ const Invoices = () => {
                   max={paymentInvoice.total_amount - (paymentInvoice.paid_amount || 0)}
                   autoFocus
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>Payment Method</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={paymentMethod === "Cash" ? "default" : "outline"}
+                    className="flex-1"
+                    onClick={() => setPaymentMethod("Cash")}
+                  >
+                    Cash
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={paymentMethod === "Online" ? "default" : "outline"}
+                    className="flex-1"
+                    onClick={() => setPaymentMethod("Online")}
+                  >
+                    Online
+                  </Button>
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>Cancel</Button>
