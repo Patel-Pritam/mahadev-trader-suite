@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -163,7 +163,7 @@ const Stock = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     const { error } = await supabase
       .from("stock_items")
       .delete()
@@ -179,15 +179,15 @@ const Stock = () => {
       toast({ title: "Success", description: "Item deleted successfully" });
       refetch();
     }
-  };
+  }, [toast, refetch]);
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setFormData({ name: "", price: "", quantity: "", unit_type: "Qty" });
     setEditingItem(null);
     setOpen(false);
-  };
+  }, []);
 
-  const openEditDialog = (item: StockItem) => {
+  const openEditDialog = useCallback((item: StockItem) => {
     setEditingItem(item);
     setFormData({
       name: item.name,
@@ -196,7 +196,12 @@ const Stock = () => {
       unit_type: item.unit_type
     });
     setOpen(true);
-  };
+  }, []);
+
+  const filteredItems = useMemo(() => 
+    items.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase())),
+    [items, searchTerm]
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -344,12 +349,7 @@ const Stock = () => {
                 <div className="inline-block w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
                 <p className="text-muted-foreground mt-4">Loading inventory...</p>
               </div>
-            ) : (() => {
-              const filteredItems = items.filter(item => 
-                item.name.toLowerCase().includes(searchTerm.toLowerCase())
-              );
-              
-              return filteredItems.length === 0 ? (
+            ) : filteredItems.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                     <Store className="w-10 h-10 text-primary" />
@@ -443,8 +443,8 @@ const Stock = () => {
                     </TableBody>
                   </Table>
                 </div>
-              );
-            })()}
+              )}
+
           </CardContent>
         </Card>
       </main>
