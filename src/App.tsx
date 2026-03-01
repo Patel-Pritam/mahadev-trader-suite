@@ -33,20 +33,22 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Navigate to="/auth" replace />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/stock" element={<Stock />} />
-            <Route path="/invoices" element={<Invoices />} />
-            <Route path="/create-invoice" element={<CreateInvoice />} />
-            <Route path="/edit-invoice/:id" element={<EditInvoice />} />
-            <Route path="/customers" element={<Customers />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/settings" element={<Settings />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <main>
+            <Routes>
+              <Route path="/" element={<Navigate to="/auth" replace />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/stock" element={<Stock />} />
+              <Route path="/invoices" element={<Invoices />} />
+              <Route path="/create-invoice" element={<CreateInvoice />} />
+              <Route path="/edit-invoice/:id" element={<EditInvoice />} />
+              <Route path="/customers" element={<Customers />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/settings" element={<Settings />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
