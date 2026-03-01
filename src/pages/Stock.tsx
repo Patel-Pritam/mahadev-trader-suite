@@ -202,20 +202,20 @@ const Stock = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <header className="border-b border-border/40 bg-card/80 backdrop-blur-xl shadow-card sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 animate-fade-in">
+          <div className="flex items-center gap-2 sm:gap-3 animate-fade-in min-w-0">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => navigate("/dashboard")}
-              className="hover:bg-primary/10"
+              className="hover:bg-primary/10 flex-shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center shadow-elegant">
-              <Store className="w-7 h-7 text-primary-foreground" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl gradient-primary flex items-center justify-center shadow-elegant flex-shrink-0">
+              <Store className="w-6 h-6 sm:w-7 sm:h-7 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate">
                 Stock Management
               </h1>
               <p className="text-xs text-muted-foreground">Manage inventory items</p>
@@ -229,9 +229,9 @@ const Stock = () => {
       <main className="container mx-auto px-4 py-8">
         <Card className="shadow-card border-2 border-primary/10 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
           <CardHeader className="space-y-4 pb-6">
-            <div className="flex flex-row items-center justify-between gap-3">
-              <div className="flex-1">
-                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
                   Stock Items
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -240,9 +240,9 @@ const Stock = () => {
               </div>
               
               {/* Collapsible Search */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <div className={`flex items-center transition-all duration-300 overflow-hidden ${
-                  searchOpen ? 'w-48 sm:w-64' : 'w-0'
+                  searchOpen ? 'w-full sm:w-64' : 'w-0'
                 }`}>
                   <Input
                     placeholder="Search items..."
@@ -272,7 +272,8 @@ const Stock = () => {
                       className="shadow-elegant flex-shrink-0"
                     >
                       <Plus className="mr-2 h-4 w-4" />
-                      Add Item
+                      <span className="hidden sm:inline">Add Item</span>
+                      <span className="sm:hidden">Add</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="border-2 border-primary/20 shadow-elegant bg-background">
@@ -368,8 +369,8 @@ const Stock = () => {
                   )}
                 </div>
               ) : (
-                <div className="rounded-xl border-2 border-border/50 overflow-hidden">
-                  <Table>
+              <div className="rounded-xl border-2 border-border/50 overflow-x-auto">
+                  <Table className="min-w-[500px]">
                     <TableHeader>
                       <TableRow className="bg-muted/30 hover:bg-muted/50">
                         <TableHead className="font-bold">Name</TableHead>
