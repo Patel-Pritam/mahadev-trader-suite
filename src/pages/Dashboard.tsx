@@ -46,28 +46,48 @@ const Dashboard = () => {
   }, [navigate]);
 
   const fetchDashboardData = async () => {
+    // Fetch business name from profile
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('business_name')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (profile) {
+        setBusinessName(profile.business_name);
+      }
+    }
 
-    // Run ALL queries in parallel for faster loading
-    const [profileRes, stockRes, invoicesRes, customersRes] = await Promise.all([
-      supabase.from('profiles').select('business_name').eq('user_id', user.id).single(),
-      supabase.from('stock_items').select('price, quantity', { count: 'exact' }),
-      supabase.from('invoices').select('total_amount', { count: 'exact' }),
-      supabase.from('customers').select('*', { count: 'exact', head: true }),
-    ]);
-
-    if (profileRes.data) setBusinessName(profileRes.data.business_name);
-
-    const stockTotalValue = stockRes.data?.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0) || 0;
-    const invoicesTotalAmount = invoicesRes.data?.reduce((sum, inv) => sum + Number(inv.total_amount), 0) || 0;
-
-    setStockCount(stockRes.count || 0);
+    // Fetch stock items count and total value
+    const { data: stockData, count: stockItems } = await supabase
+      .from('stock_items')
+      .select('price, quantity', { count: 'exact' });
+    
+    const stockTotalValue = stockData?.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0) || 0;
+    
+    // Fetch invoices count and total
+    const { data: invoicesData, count: invoices } = await supabase
+      .from('invoices')
+      .select('total_amount', { count: 'exact' });
+    
+    const invoicesTotalAmount = invoicesData?.reduce((sum, inv) => sum + Number(inv.total_amount), 0) || 0;
+    
+    // Fetch customers count and their total invoice amount
+    const { count: customers } = await supabase
+      .from('customers')
+      .select('*', { count: 'exact', head: true });
+    
+    // Customer total is same as invoice total (all invoices linked to customers)
+    const customersTotalAmount = invoicesTotalAmount;
+    
+    setStockCount(stockItems || 0);
     setStockValue(stockTotalValue);
-    setInvoiceCount(invoicesRes.count || 0);
+    setInvoiceCount(invoices || 0);
     setInvoiceTotal(invoicesTotalAmount);
-    setCustomerCount(customersRes.count || 0);
-    setCustomerTotal(invoicesTotalAmount);
+    setCustomerCount(customers || 0);
+    setCustomerTotal(customersTotalAmount);
     setTotalSales(invoicesTotalAmount);
   };
 
