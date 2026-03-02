@@ -395,14 +395,14 @@ const CreateInvoice = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/invoices")}>
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/invoices")} className="flex-shrink-0">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
               <Store className="w-6 h-6 text-primary-foreground" />
             </div>
-            <h1 className="text-xl font-bold">Create {documentType}</h1>
+            <h1 className="text-base sm:text-xl font-bold truncate">Create {documentType}</h1>
           </div>
           <ThemeToggle />
         </div>
@@ -437,18 +437,20 @@ const CreateInvoice = () => {
               <CardTitle>Customer Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                 <Button
                   variant={!newCustomerMode ? "default" : "outline"}
                   onClick={() => setNewCustomerMode(false)}
+                  size="sm"
                 >
                   Select Existing
                 </Button>
                 <Button
                   variant={newCustomerMode ? "default" : "outline"}
                   onClick={() => setNewCustomerMode(true)}
+                  size="sm"
                 >
-                  Add New Customer
+                  Add New
                 </Button>
               </div>
 
@@ -562,7 +564,8 @@ const CreateInvoice = () => {
                 </p>
               ) : (
                 <div className="space-y-4">
-                  <Table>
+                  <div className="overflow-x-auto">
+                  <Table className="min-w-[450px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Item</TableHead>
@@ -587,7 +590,7 @@ const CreateInvoice = () => {
                               step="0.01"
                               value={item.price}
                               onChange={(e) => updateItemPrice(index, parseFloat(e.target.value))}
-                              className="w-24"
+                              className="w-20 sm:w-24"
                             />
                           </TableCell>
                           <TableCell>
@@ -596,7 +599,7 @@ const CreateInvoice = () => {
                               step="0.01"
                               value={item.quantity}
                               onChange={(e) => updateItemQuantity(index, parseFloat(e.target.value))}
-                              className="w-24"
+                              className="w-20 sm:w-24"
                             />
                           </TableCell>
                           <TableCell>₹{(item.price * item.quantity).toFixed(2)}</TableCell>
@@ -613,6 +616,7 @@ const CreateInvoice = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  </div>
 
                   <div className="flex justify-end pt-4 border-t">
                     <div className="text-right">
