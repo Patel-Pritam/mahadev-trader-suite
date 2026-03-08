@@ -190,7 +190,7 @@ const Settings = () => {
         <div className="space-y-3">
           {/* Business Profile Section */}
           <Collapsible open={openSection === "profile"} onOpenChange={() => toggleSection("profile")}>
-            <Card className="shadow-card border-2 border-secondary/10 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm overflow-hidden">
+            <Card className="shadow-card border border-border overflow-hidden animate-fade-in opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
               <CollapsibleTrigger className="w-full">
                 <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer">
                   <div className="flex items-center gap-4">
