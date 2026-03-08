@@ -438,7 +438,7 @@ const EditInvoice = () => {
             {saving ? "Updating..." : "Update Invoice"}
           </Button>
         </div>
-      </main>
+
 
       <Dialog open={showItemDialog} onOpenChange={setShowItemDialog}>
         <DialogContent>
