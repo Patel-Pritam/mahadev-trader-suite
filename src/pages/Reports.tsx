@@ -498,8 +498,8 @@ const Reports = () => {
             )}
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 };
 

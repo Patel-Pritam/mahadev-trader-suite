@@ -440,8 +440,8 @@ const Settings = () => {
             </button>
           </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 };
 
