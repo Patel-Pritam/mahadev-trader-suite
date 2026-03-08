@@ -300,12 +300,12 @@ const Settings = () => {
 
           {/* Language Section */}
           <Collapsible open={openSection === "language"} onOpenChange={() => toggleSection("language")}>
-            <Card className="shadow-card border-2 border-secondary/10 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm overflow-hidden">
+            <Card className="shadow-card border border-border overflow-hidden animate-fade-in opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
               <CollapsibleTrigger className="w-full">
                 <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                      <Globe className="w-5 h-5 text-blue-500" />
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Globe className="w-5 h-5 text-primary" />
                     </div>
                     <div className="text-left">
                       <p className="font-semibold">Language</p>
