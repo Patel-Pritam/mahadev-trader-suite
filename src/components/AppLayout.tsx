@@ -15,9 +15,9 @@ export function AppLayout({ children, title, subtitle, headerActions }: AppLayou
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center justify-between border-b border-border px-4 sm:px-6 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+          <header className="h-14 flex items-center justify-between border-b border-border px-4 sm:px-6 glass sticky top-0 z-10 animate-fade-in">
             <div className="flex items-center gap-3 min-w-0">
-              <SidebarTrigger className="shrink-0" />
+              <SidebarTrigger className="shrink-0 hover:scale-110 transition-transform duration-200" />
               {title && (
                 <div className="min-w-0">
                   <h1 className="text-base sm:text-lg font-semibold truncate">{title}</h1>
