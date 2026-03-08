@@ -391,21 +391,7 @@ const CreateInvoice = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/invoices")} className="flex-shrink-0">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-              <Store className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <h1 className="text-base sm:text-xl font-bold truncate">Create {documentType}</h1>
-          </div>
-          <ThemeToggle />
-        </div>
-      </header>
+    <AppLayout title={`Create ${documentType}`} subtitle="New billing document">
 
       {/* Document Type Selection */}
       <div className="container mx-auto px-4 pt-6 max-w-4xl">
