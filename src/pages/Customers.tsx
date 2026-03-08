@@ -199,35 +199,9 @@ const Customers = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
-      <header className="border-b border-border/40 bg-card/80 backdrop-blur-xl shadow-card sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3 animate-fade-in min-w-0">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => navigate("/dashboard")}
-              className="hover:bg-accent/10 flex-shrink-0"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl gradient-accent flex items-center justify-center shadow-elegant flex-shrink-0">
-              <Store className="w-6 h-6 sm:w-7 sm:h-7 text-accent-foreground" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-base sm:text-xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent truncate">
-                Customers
-              </h1>
-              <p className="text-xs text-muted-foreground">Manage customer directory</p>
-            </div>
-          </div>
-          <ThemeToggle />
-        </div>
-      </header>
-      <TopNav />
-
-      <main className="container mx-auto px-4 py-8">
-        <Card className="shadow-card border-2 border-accent/10 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
+    <AppLayout title="Customers" subtitle="Manage customer directory">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl">
+        <Card className="shadow-card border border-border">
           <CardHeader className="space-y-4 pb-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="min-w-0">
