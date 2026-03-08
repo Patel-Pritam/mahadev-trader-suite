@@ -422,7 +422,7 @@ const Settings = () => {
           </Collapsible>
 
           {/* Logout Section */}
-          <Card className="shadow-card border-2 border-destructive/20 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm overflow-hidden">
+          <Card className="shadow-card border border-destructive/20 overflow-hidden animate-fade-in opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
             <button 
               onClick={handleLogout}
               className="w-full flex items-center justify-between p-4 hover:bg-destructive/5 transition-colors cursor-pointer"
