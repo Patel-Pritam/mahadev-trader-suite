@@ -7,9 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { AppLayout } from "@/components/AppLayout";
 import { Textarea } from "@/components/ui/textarea";
-import { Store, ArrowLeft, Plus, Trash2, Save, FileText, FileCheck } from "lucide-react";
+import { Plus, Trash2, Save, FileText, FileCheck } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
@@ -392,24 +392,10 @@ const CreateInvoice = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/invoices")} className="flex-shrink-0">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-              <Store className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <h1 className="text-base sm:text-xl font-bold truncate">Create {documentType}</h1>
-          </div>
-          <ThemeToggle />
-        </div>
-      </header>
+    <AppLayout title={`Create ${documentType}`} subtitle="New billing document">
 
       {/* Document Type Selection */}
-      <div className="container mx-auto px-4 pt-6 max-w-4xl">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
         <Tabs value={documentType} onValueChange={(value) => setDocumentType(value as "Invoice" | "Quotation")} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="Invoice" className="flex items-center gap-2">
@@ -429,7 +415,7 @@ const CreateInvoice = () => {
         )}
       </div>
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-4xl">
         <div className="space-y-6">
           {/* Customer Selection */}
           <Card>
@@ -640,7 +626,7 @@ const CreateInvoice = () => {
             {saving ? "Saving..." : `Save ${documentType}`}
           </Button>
         </div>
-      </main>
+      </div>
 
       {/* Item Selection Dialog */}
       <Dialog open={showItemDialog} onOpenChange={setShowItemDialog}>
@@ -686,7 +672,7 @@ const CreateInvoice = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </AppLayout>
   );
 };
 

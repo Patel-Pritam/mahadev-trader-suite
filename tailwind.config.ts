@@ -44,6 +44,10 @@ export default {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
         },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
@@ -90,8 +94,8 @@ export default {
           "100%": { transform: "translateY(0)", opacity: "1" },
         },
         "glow": {
-          "0%, 100%": { boxShadow: "0 0 20px hsl(var(--primary-glow) / 0.5)" },
-          "50%": { boxShadow: "0 0 40px hsl(var(--primary-glow) / 0.8)" },
+          "0%, 100%": { boxShadow: "0 0 20px hsl(var(--primary) / 0.3)" },
+          "50%": { boxShadow: "0 0 40px hsl(var(--primary) / 0.5)" },
         },
       },
       animation: {

@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { Store, ArrowLeft, Plus, Trash2, Save } from "lucide-react";
+import { AppLayout } from "@/components/AppLayout";
+import { Plus, Trash2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { z } from "zod";
@@ -318,30 +318,17 @@ const EditInvoice = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
+      <AppLayout title="Edit Invoice">
+        <div className="flex items-center justify-center h-64">
+          <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/invoices")}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-              <Store className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <h1 className="text-xl font-bold">Edit Invoice</h1>
-          </div>
-          <ThemeToggle />
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
+    <AppLayout title="Edit Invoice" subtitle="Modify invoice details">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Customer Information</CardTitle>
@@ -451,7 +438,7 @@ const EditInvoice = () => {
             {saving ? "Updating..." : "Update Invoice"}
           </Button>
         </div>
-      </main>
+
 
       <Dialog open={showItemDialog} onOpenChange={setShowItemDialog}>
         <DialogContent>
@@ -481,7 +468,8 @@ const EditInvoice = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </AppLayout>
   );
 };
 
