@@ -626,7 +626,7 @@ const CreateInvoice = () => {
             {saving ? "Saving..." : `Save ${documentType}`}
           </Button>
         </div>
-      </main>
+      </div>
 
       {/* Item Selection Dialog */}
       <Dialog open={showItemDialog} onOpenChange={setShowItemDialog}>
