@@ -254,29 +254,8 @@ const Reports = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/5">
-      <header className="border-b border-border/40 bg-card/80 backdrop-blur-xl shadow-card sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 animate-fade-in">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="hover:bg-secondary/10">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center shadow-elegant">
-              <Store className="w-7 h-7 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Reports
-              </h1>
-              <p className="text-xs text-muted-foreground">Sales analytics & reports</p>
-            </div>
-          </div>
-          <ThemeToggle />
-        </div>
-      </header>
-      <TopNav />
-
-      <main className="container mx-auto px-4 py-8 space-y-6">
+    <AppLayout title="Reports" subtitle="Sales analytics & reports">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl space-y-6">
         {/* Date Range Picker */}
         <Card className="shadow-card border-2 border-secondary/10">
           <CardHeader className="pb-4">

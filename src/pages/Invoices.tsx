@@ -676,7 +676,6 @@ const Invoices = () => {
             })()}
           </CardContent>
         </Card>
-      </main>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

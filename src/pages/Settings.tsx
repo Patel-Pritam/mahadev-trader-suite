@@ -176,40 +176,17 @@ const Settings = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/5 flex items-center justify-center">
-        <div className="inline-block w-12 h-12 rounded-full border-4 border-secondary/20 border-t-secondary animate-spin"></div>
-      </div>
+      <AppLayout title="Settings">
+        <div className="flex items-center justify-center h-64">
+          <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/5">
-      <header className="border-b border-border/40 bg-card/80 backdrop-blur-xl shadow-card sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 animate-fade-in">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => navigate("/dashboard")}
-              className="hover:bg-secondary/10"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center shadow-elegant">
-              <Store className="w-7 h-7 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Settings
-              </h1>
-              <p className="text-xs text-muted-foreground">Manage your preferences</p>
-            </div>
-          </div>
-        </div>
-      </header>
-      <TopNav />
-
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
+    <AppLayout title="Settings" subtitle="Manage your preferences">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
         <div className="space-y-3">
           {/* Business Profile Section */}
           <Collapsible open={openSection === "profile"} onOpenChange={() => toggleSection("profile")}>
