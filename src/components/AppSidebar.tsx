@@ -46,8 +46,8 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {navItems.map((item, index) => (
+                <SidebarMenuItem key={item.title} className="animate-stagger-in opacity-0" style={{ animationDelay: `${index * 0.05}s`, animationFillMode: 'forwards' }}>
                   <SidebarMenuButton
                     asChild
                     isActive={isActive(item.url)}
@@ -56,10 +56,10 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                      activeClassName="bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary"
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200"
+                      activeClassName="bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
                     >
-                      <item.icon className="h-[18px] w-[18px] shrink-0" />
+                      <item.icon className="h-[18px] w-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -70,12 +70,12 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-3">
+      <SidebarFooter className="p-3 animate-fade-in">
         <Button
           variant="ghost"
           size={collapsed ? "icon" : "default"}
           onClick={handleSignOut}
-          className="w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 justify-start gap-3"
+          className="w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 justify-start gap-3 transition-all duration-200"
         >
           <LogOut className="h-[18px] w-[18px] shrink-0" />
           {!collapsed && <span className="text-sm">Sign Out</span>}

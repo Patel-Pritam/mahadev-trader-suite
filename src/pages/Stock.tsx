@@ -200,10 +200,10 @@ const Stock = () => {
   return (
     <AppLayout title="Stock Management" subtitle="Manage inventory items">
       <div className="p-4 sm:p-6 lg:p-8 max-w-6xl">
-        <Card className="shadow-card border border-border">
+        <Card className="shadow-card border border-border animate-fade-in">
           <CardHeader className="space-y-4 pb-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 animate-slide-up opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
                 <CardTitle className="text-xl sm:text-2xl font-semibold">
                   Stock Items
                 </CardTitle>

@@ -127,18 +127,19 @@ const Dashboard = () => {
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-6xl">
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {stats.map((stat) => (
+          {stats.map((stat, index) => (
             <Card
               key={stat.label}
               onClick={stat.onClick}
-              className="group cursor-pointer border border-border hover:border-primary/30 transition-all duration-200 hover:shadow-md"
+              className="group cursor-pointer border border-border hover:border-primary/30 hover-lift shadow-card opacity-0 animate-stagger-in"
+              style={{ animationDelay: `${index * 0.08}s`, animationFillMode: 'forwards' }}
             >
               <CardContent className="p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${stat.color}`}>
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${stat.color} transition-transform duration-300 group-hover:scale-110`}>
                     <stat.icon className="h-[18px] w-[18px]" />
                   </div>
-                  <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </div>
                 <p className="text-xl sm:text-2xl font-semibold tracking-tight">{stat.value}</p>
                 <p className="text-xs text-muted-foreground mt-1">{stat.sub}</p>
@@ -148,22 +149,26 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Refill */}
-        <StockRefillDialog onRefillComplete={fetchDashboardData}>
-          <Card className="cursor-pointer border border-dashed border-border hover:border-primary/40 transition-all duration-200 hover:shadow-sm group">
-            <CardContent className="p-4 sm:p-5 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                <RefreshCw className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Quick Stock Refill</p>
-                <p className="text-xs text-muted-foreground">Add inventory to multiple items at once</p>
-              </div>
-            </CardContent>
-          </Card>
-        </StockRefillDialog>
+        <div className="opacity-0 animate-slide-up" style={{ animationDelay: '0.35s', animationFillMode: 'forwards' }}>
+          <StockRefillDialog onRefillComplete={fetchDashboardData}>
+            <Card className="cursor-pointer border border-dashed border-border hover:border-primary/40 transition-all duration-300 hover:shadow-md group">
+              <CardContent className="p-4 sm:p-5 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 group-hover:scale-110 group-hover:rotate-180">
+                  <RefreshCw className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Quick Stock Refill</p>
+                  <p className="text-xs text-muted-foreground">Add inventory to multiple items at once</p>
+                </div>
+              </CardContent>
+            </Card>
+          </StockRefillDialog>
+        </div>
 
         {/* Low Stock Alerts */}
-        <LowStockAlerts threshold={10} onRefresh={fetchDashboardData} />
+        <div className="opacity-0 animate-slide-up" style={{ animationDelay: '0.45s', animationFillMode: 'forwards' }}>
+          <LowStockAlerts threshold={10} onRefresh={fetchDashboardData} />
+        </div>
       </div>
     </AppLayout>
   );

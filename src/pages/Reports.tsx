@@ -257,7 +257,7 @@ const Reports = () => {
     <AppLayout title="Reports" subtitle="Sales analytics & reports">
       <div className="p-4 sm:p-6 lg:p-8 max-w-6xl space-y-6">
         {/* Date Range Picker */}
-        <Card className="shadow-card border-2 border-secondary/10">
+        <Card className="shadow-card border border-border animate-fade-in">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg flex items-center gap-2">
               <CalendarIcon className="h-5 w-5 text-primary" />
@@ -314,7 +314,7 @@ const Reports = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="shadow-card">
+          <Card className="shadow-card hover-lift opacity-0 animate-stagger-in" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
               <DollarSign className="h-4 w-4 text-primary" />
@@ -331,7 +331,7 @@ const Reports = () => {
             </CardContent>
           </Card>
 
-          <Card className="shadow-card">
+          <Card className="shadow-card hover-lift opacity-0 animate-stagger-in" style={{ animationDelay: '0.15s', animationFillMode: 'forwards' }}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Cash</CardTitle>
               <TrendingUp className="h-4 w-4 text-success" />
@@ -345,7 +345,7 @@ const Reports = () => {
             </CardContent>
           </Card>
 
-          <Card className="shadow-card">
+          <Card className="shadow-card hover-lift opacity-0 animate-stagger-in" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Online</CardTitle>
               <FileText className="h-4 w-4 text-primary" />
@@ -359,7 +359,7 @@ const Reports = () => {
             </CardContent>
           </Card>
 
-          <Card className="shadow-card">
+          <Card className="shadow-card hover-lift opacity-0 animate-stagger-in" style={{ animationDelay: '0.25s', animationFillMode: 'forwards' }}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Pending</CardTitle>
               <Clock className="h-4 w-4 text-destructive" />

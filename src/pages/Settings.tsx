@@ -190,7 +190,7 @@ const Settings = () => {
         <div className="space-y-3">
           {/* Business Profile Section */}
           <Collapsible open={openSection === "profile"} onOpenChange={() => toggleSection("profile")}>
-            <Card className="shadow-card border-2 border-secondary/10 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm overflow-hidden">
+            <Card className="shadow-card border border-border overflow-hidden animate-fade-in opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
               <CollapsibleTrigger className="w-full">
                 <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer">
                   <div className="flex items-center gap-4">
@@ -258,7 +258,7 @@ const Settings = () => {
 
           {/* Theme Section */}
           <Collapsible open={openSection === "theme"} onOpenChange={() => toggleSection("theme")}>
-            <Card className="shadow-card border-2 border-secondary/10 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm overflow-hidden">
+            <Card className="shadow-card border border-border overflow-hidden animate-fade-in opacity-0" style={{ animationDelay: '0.15s', animationFillMode: 'forwards' }}>
               <CollapsibleTrigger className="w-full">
                 <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer">
                   <div className="flex items-center gap-4">
@@ -300,12 +300,12 @@ const Settings = () => {
 
           {/* Language Section */}
           <Collapsible open={openSection === "language"} onOpenChange={() => toggleSection("language")}>
-            <Card className="shadow-card border-2 border-secondary/10 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm overflow-hidden">
+            <Card className="shadow-card border border-border overflow-hidden animate-fade-in opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
               <CollapsibleTrigger className="w-full">
                 <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                      <Globe className="w-5 h-5 text-blue-500" />
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Globe className="w-5 h-5 text-primary" />
                     </div>
                     <div className="text-left">
                       <p className="font-semibold">Language</p>
@@ -351,12 +351,12 @@ const Settings = () => {
 
           {/* Notifications Section */}
           <Collapsible open={openSection === "notifications"} onOpenChange={() => toggleSection("notifications")}>
-            <Card className="shadow-card border-2 border-secondary/10 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm overflow-hidden">
+            <Card className="shadow-card border border-border overflow-hidden animate-fade-in opacity-0" style={{ animationDelay: '0.25s', animationFillMode: 'forwards' }}>
               <CollapsibleTrigger className="w-full">
                 <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                      <Bell className="w-5 h-5 text-amber-500" />
+                    <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
+                      <Bell className="w-5 h-5 text-warning" />
                     </div>
                     <div className="text-left">
                       <p className="font-semibold">Notifications</p>
@@ -422,7 +422,7 @@ const Settings = () => {
           </Collapsible>
 
           {/* Logout Section */}
-          <Card className="shadow-card border-2 border-destructive/20 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm overflow-hidden">
+          <Card className="shadow-card border border-destructive/20 overflow-hidden animate-fade-in opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
             <button 
               onClick={handleLogout}
               className="w-full flex items-center justify-between p-4 hover:bg-destructive/5 transition-colors cursor-pointer"
