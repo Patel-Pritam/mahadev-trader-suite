@@ -856,7 +856,8 @@ const Invoices = () => {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </AppLayout>
   );
 };
 

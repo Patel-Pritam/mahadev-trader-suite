@@ -421,8 +421,8 @@ const Stock = () => {
             })()}
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 };
 
