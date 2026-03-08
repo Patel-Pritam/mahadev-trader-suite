@@ -394,7 +394,7 @@ const CreateInvoice = () => {
     <AppLayout title={`Create ${documentType}`} subtitle="New billing document">
 
       {/* Document Type Selection */}
-      <div className="container mx-auto px-4 pt-6 max-w-4xl">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
         <Tabs value={documentType} onValueChange={(value) => setDocumentType(value as "Invoice" | "Quotation")} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="Invoice" className="flex items-center gap-2">
