@@ -468,7 +468,8 @@ const EditInvoice = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </AppLayout>
   );
 };
 

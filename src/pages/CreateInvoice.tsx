@@ -671,7 +671,7 @@ const CreateInvoice = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </AppLayout>
   );
 };
 
