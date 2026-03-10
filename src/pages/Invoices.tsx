@@ -522,18 +522,16 @@ const Invoices = () => {
                   )}
                 </div>
               ) : (
-                <div className="rounded-xl border-2 border-border/50 overflow-x-auto">
+                <div className="overflow-x-auto">
                   <Table className="min-w-[700px]">
                     <TableHeader>
-                      <TableRow className="bg-muted/30 hover:bg-muted/50">
-                        <TableHead className="font-bold">Inv No.</TableHead>
-                        <TableHead className="font-bold">Date</TableHead>
-                        <TableHead className="font-bold">Type</TableHead>
-                        <TableHead className="font-bold">Customer</TableHead>
-                        <TableHead className="font-bold">Mobile</TableHead>
-                        <TableHead className="font-bold">Payment</TableHead>
-                        <TableHead className="text-right font-bold">Amount</TableHead>
-                        <TableHead className="text-right font-bold">Actions</TableHead>
+                      <TableRow className="bg-muted/30 hover:bg-muted/40 border-b border-border">
+                         <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">Invoice #</TableHead>
+                         <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">Customer</TableHead>
+                         <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">Date</TableHead>
+                         <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">Amount</TableHead>
+                         <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                         <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
