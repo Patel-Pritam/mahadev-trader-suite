@@ -11,9 +11,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AppLayout } from "@/components/AppLayout";
-import { Store, ArrowLeft, Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Store, Plus, Pencil, Trash2, Search, Package, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { Badge } from "@/components/ui/badge";
 
 const stockItemSchema = z.object({
   name: z.string().trim().min(1, "Item name is required").max(100, "Item name must be less than 100 characters"),
@@ -36,25 +37,14 @@ const Stock = () => {
   const [open, setOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    price: "",
-    quantity: "",
-    unit_type: "Qty"
-  });
+  const [formData, setFormData] = useState({ name: "", price: "", quantity: "", unit_type: "Qty" });
 
   const { data: items = [], isLoading: loading, refetch } = useQuery({
     queryKey: ['stock-items'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
-
-      const { data, error } = await supabase
-        .from('stock_items')
-        .select('*')
-        .order('created_at', { ascending: false });
-
+      const { data, error } = await supabase.from('stock_items').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       return data as StockItem[];
     },
@@ -62,365 +52,217 @@ const Stock = () => {
     gcTime: 300000,
   });
 
-  // Realtime subscription
   useEffect(() => {
-    const channel = supabase
-      .channel('stock-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'stock_items'
-        },
-        () => {
-          refetch();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    const channel = supabase.channel('stock-changes').on('postgres_changes', { event: '*', schema: 'public', table: 'stock_items' }, () => refetch()).subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [refetch]);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-    }
-  };
+  useEffect(() => { checkAuth(); }, []);
+  const checkAuth = async () => { const { data: { session } } = await supabase.auth.getSession(); if (!session) navigate("/auth"); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
     try {
-      const validatedData = stockItemSchema.parse({
-        name: formData.name,
-        price: parseFloat(formData.price),
-        quantity: parseFloat(formData.quantity),
-        unit_type: formData.unit_type,
-      });
-
-      const itemData = {
-        name: validatedData.name,
-        price: validatedData.price,
-        quantity: validatedData.quantity,
-        unit_type: validatedData.unit_type,
-        user_id: user.id,
-      };
-
+      const validatedData = stockItemSchema.parse({ name: formData.name, price: parseFloat(formData.price), quantity: parseFloat(formData.quantity), unit_type: formData.unit_type });
+      const itemData = { name: validatedData.name, price: validatedData.price, quantity: validatedData.quantity, unit_type: validatedData.unit_type, user_id: user.id };
       if (editingItem) {
-        const { error } = await supabase
-          .from("stock_items")
-          .update(itemData)
-          .eq("id", editingItem.id);
-
-        if (error) {
-          toast({
-            title: "Error",
-            description: "Failed to update item",
-            variant: "destructive"
-          });
-        } else {
-          toast({ title: "Success", description: "Item updated successfully" });
-          refetch();
-          resetForm();
-        }
+        const { error } = await supabase.from("stock_items").update(itemData).eq("id", editingItem.id);
+        if (error) { toast({ title: "Error", description: "Failed to update item", variant: "destructive" }); } else { toast({ title: "Success", description: "Item updated successfully" }); refetch(); resetForm(); }
       } else {
-        const { error } = await supabase
-          .from("stock_items")
-          .insert([itemData]);
-
-        if (error) {
-          toast({
-            title: "Error",
-            description: "Failed to add item",
-            variant: "destructive"
-          });
-        } else {
-          toast({ title: "Success", description: "Item added successfully" });
-          refetch();
-          resetForm();
-        }
+        const { error } = await supabase.from("stock_items").insert([itemData]);
+        if (error) { toast({ title: "Error", description: "Failed to add item", variant: "destructive" }); } else { toast({ title: "Success", description: "Item added successfully" }); refetch(); resetForm(); }
       }
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        toast({
-          title: "Validation Error",
-          description: error.errors[0].message,
-          variant: "destructive"
-        });
-      }
-    }
+    } catch (error) { if (error instanceof z.ZodError) { toast({ title: "Validation Error", description: error.errors[0].message, variant: "destructive" }); } }
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase
-      .from("stock_items")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete item",
-        variant: "destructive"
-      });
-    } else {
-      toast({ title: "Success", description: "Item deleted successfully" });
-      refetch();
-    }
+    const { error } = await supabase.from("stock_items").delete().eq("id", id);
+    if (error) { toast({ title: "Error", description: "Failed to delete item", variant: "destructive" }); } else { toast({ title: "Success", description: "Item deleted successfully" }); refetch(); }
   };
 
-  const resetForm = () => {
-    setFormData({ name: "", price: "", quantity: "", unit_type: "Qty" });
-    setEditingItem(null);
-    setOpen(false);
-  };
+  const resetForm = () => { setFormData({ name: "", price: "", quantity: "", unit_type: "Qty" }); setEditingItem(null); setOpen(false); };
+  const openEditDialog = (item: StockItem) => { setEditingItem(item); setFormData({ name: item.name, price: item.price.toString(), quantity: item.quantity.toString(), unit_type: item.unit_type }); setOpen(true); };
 
-  const openEditDialog = (item: StockItem) => {
-    setEditingItem(item);
-    setFormData({
-      name: item.name,
-      price: item.price.toString(),
-      quantity: item.quantity.toString(),
-      unit_type: item.unit_type
-    });
-    setOpen(true);
+  const filteredItems = items.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const inStockCount = items.filter(i => i.quantity >= 10).length;
+  const lowStockCount = items.filter(i => i.quantity > 0 && i.quantity < 10).length;
+  const outOfStockCount = items.filter(i => i.quantity === 0).length;
+
+  const getStockStatus = (qty: number) => {
+    if (qty === 0) return { label: "Out of Stock", color: "bg-destructive/10 text-destructive border-destructive/20" };
+    if (qty < 10) return { label: "Low Stock", color: "bg-warning/10 text-warning border-warning/20" };
+    return { label: "In Stock", color: "bg-success/10 text-success border-success/20" };
   };
 
   return (
-    <AppLayout title="Stock Management" subtitle="Manage inventory items">
-      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl">
-        <Card className="shadow-card border border-border animate-fade-in">
-          <CardHeader className="space-y-4 pb-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex-1 min-w-0 animate-slide-up opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
-                <CardTitle className="text-xl sm:text-2xl font-semibold">
-                  Stock Items
-                </CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {items.length} items in inventory
-                </p>
+    <AppLayout
+      title="Inventory Management"
+      subtitle="Manage products, stock levels, and pricing"
+      headerActions={
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => { resetForm(); setOpen(true); }} className="btn-3d">
+              <Plus className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Add New Product</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="border border-border shadow-3d bg-card">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">{editingItem ? "Edit Item" : "Add New Item"}</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Item Name</Label>
+                <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required className="h-11" />
               </div>
-              
-              {/* Collapsible Search */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className={`flex items-center transition-all duration-300 overflow-hidden ${
-                  searchOpen ? 'w-full sm:w-64' : 'w-0'
-                }`}>
-                  <Input
-                    placeholder="Search items..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="border-2 focus:border-primary/50"
-                    autoFocus={searchOpen}
-                  />
-                </div>
-                <Button
-                  variant={searchOpen ? "default" : "outline"}
-                  size="icon"
-                  onClick={() => {
-                    setSearchOpen(!searchOpen);
-                    if (searchOpen) setSearchTerm("");
-                  }}
-                  className={`flex-shrink-0 ${searchOpen ? 'bg-primary text-primary-foreground' : ''}`}
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
+              <div className="space-y-2">
+                <Label htmlFor="price">Price (₹)</Label>
+                <Input id="price" type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} required className="h-11" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="quantity">Quantity</Label>
+                <Input id="quantity" type="number" step="0.01" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} required className="h-11" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="unit_type">Unit Type</Label>
+                <Select value={formData.unit_type} onValueChange={(value) => setFormData({ ...formData, unit_type: value })}>
+                  <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-card border shadow-lg z-50">
+                    <SelectItem value="Kg">Kg (Kilogram)</SelectItem>
+                    <SelectItem value="Qty">Qty (Quantity)</SelectItem>
+                    <SelectItem value="L">L (Litre)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button type="submit" className="w-full h-11 btn-3d">{editingItem ? "Update" : "Add"} Item</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      }
+    >
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl space-y-6">
+        {/* Stats row */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: "Total Products", value: items.length, color: "text-foreground" },
+            { label: "In Stock", value: inStockCount, color: "text-success" },
+            { label: "Low Stock", value: lowStockCount, color: "text-warning" },
+            { label: "Out of Stock", value: outOfStockCount, color: "text-destructive" },
+          ].map((s, i) => (
+            <Card key={s.label} className="card-3d-subtle opacity-0 animate-stagger-in" style={{ animationDelay: `${i * 0.06}s`, animationFillMode: 'forwards' }}>
+              <CardContent className="p-4">
+                <p className="text-xs font-medium text-muted-foreground">{s.label}</p>
+                <p className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value.toLocaleString()}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-                <Dialog open={open} onOpenChange={setOpen}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      onClick={() => { resetForm(); setOpen(true); }}
-                      variant="gradient"
-                      className="shadow-elegant flex-shrink-0"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      <span className="hidden sm:inline">Add Item</span>
-                      <span className="sm:hidden">Add</span>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="border-2 border-primary/20 shadow-elegant bg-background">
-                    <DialogHeader>
-                      <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                        {editingItem ? "Edit Item" : "Add New Item"}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name" className="font-semibold">Item Name</Label>
-                        <Input
-                          id="name"
-                          value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          required
-                          className="border-2 focus:border-primary/50"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="price" className="font-semibold">Price (₹)</Label>
-                        <Input
-                          id="price"
-                          type="number"
-                          step="0.01"
-                          value={formData.price}
-                          onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                          required
-                          className="border-2 focus:border-primary/50"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="quantity" className="font-semibold">Quantity</Label>
-                        <Input
-                          id="quantity"
-                          type="number"
-                          step="0.01"
-                          value={formData.quantity}
-                          onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                          required
-                          className="border-2 focus:border-primary/50"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="unit_type" className="font-semibold">Unit Type</Label>
-                        <Select value={formData.unit_type} onValueChange={(value) => setFormData({ ...formData, unit_type: value })}>
-                          <SelectTrigger className="border-2">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-background border shadow-lg z-50">
-                            <SelectItem value="Kg">Kg (Kilogram)</SelectItem>
-                            <SelectItem value="Qty">Qty (Quantity)</SelectItem>
-                            <SelectItem value="L">L (Litre)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <Button type="submit" variant="gradient" className="w-full" size="lg">
-                        {editingItem ? "Update" : "Add"} Item
-                      </Button>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
+        {/* Search bar */}
+        <div className="flex items-center gap-3 animate-fade-in" style={{ animationDelay: '0.25s' }}>
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search SKU, name or category..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 h-11 bg-card border-border" />
+          </div>
+        </div>
+
+        {/* Table */}
+        <Card className="shadow-3d border border-border animate-fade-in" style={{ animationDelay: '0.3s' }}>
+          <CardContent className="p-0">
             {loading ? (
-              <div className="text-center py-12">
-                <div className="inline-block w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
-                <p className="text-muted-foreground mt-4">Loading inventory...</p>
+              <div className="text-center py-16">
+                <div className="inline-block w-10 h-10 rounded-full border-3 border-primary/20 border-t-primary animate-spin" />
+                <p className="text-muted-foreground mt-4 text-sm">Loading inventory...</p>
               </div>
-            ) : (() => {
-              const filteredItems = items.filter(item => 
-                item.name.toLowerCase().includes(searchTerm.toLowerCase())
-              );
-              
-              return filteredItems.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <Store className="w-10 h-10 text-primary" />
-                  </div>
-                  <p className="text-lg font-semibold mb-2">
-                    {searchTerm ? "No items found" : "No stock items yet"}
-                  </p>
-                  <p className="text-muted-foreground mb-6">
-                    {searchTerm ? "Try a different search term" : "Get started by adding your first inventory item"}
-                  </p>
-                  {!searchTerm && (
-                    <Button onClick={() => { resetForm(); setOpen(true); }} variant="gradient">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Your First Item
-                    </Button>
-                  )}
+            ) : filteredItems.length === 0 ? (
+              <div className="text-center py-20">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Package className="w-8 h-8 text-primary" />
                 </div>
-              ) : (
-              <div className="rounded-xl border-2 border-border/50 overflow-x-auto">
-                  <Table className="min-w-[500px]">
-                    <TableHeader>
-                      <TableRow className="bg-muted/30 hover:bg-muted/50">
-                        <TableHead className="font-bold">Name</TableHead>
-                        <TableHead className="font-bold">Price</TableHead>
-                        <TableHead className="font-bold">Quantity</TableHead>
-                        <TableHead className="font-bold">Unit</TableHead>
-                        <TableHead className="text-right font-bold">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredItems.map((item, index) => (
-                        <TableRow 
-                          key={item.id} 
-                          className="hover:bg-primary/5 transition-colors animate-fade-in"
-                          style={{ animationDelay: `${index * 0.05}s` }}
-                        >
-                          <TableCell className="font-medium">{item.name}</TableCell>
-                          <TableCell className="text-success font-semibold">₹{item.price.toFixed(2)}</TableCell>
+                <p className="text-lg font-semibold mb-1">{searchTerm ? "No items found" : "No stock items yet"}</p>
+                <p className="text-sm text-muted-foreground mb-6">{searchTerm ? "Try a different search term" : "Get started by adding your first inventory item"}</p>
+                {!searchTerm && <Button onClick={() => { resetForm(); setOpen(true); }} className="btn-3d"><Plus className="mr-2 h-4 w-4" />Add Your First Item</Button>}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/40 border-b border-border">
+                      <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">Product Name</TableHead>
+                      <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">Current Stock</TableHead>
+                      <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">Unit Price</TableHead>
+                      <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                      <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredItems.map((item, index) => {
+                      const status = getStockStatus(item.quantity);
+                      return (
+                        <TableRow key={item.id} className="hover:bg-muted/30 transition-colors border-b border-border/50 animate-fade-in" style={{ animationDelay: `${index * 0.03}s` }}>
                           <TableCell>
-                            <span className={`font-semibold ${item.quantity < 10 ? 'text-destructive' : 'text-foreground'}`}>
-                              {item.quantity}
-                            </span>
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                <Package className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-sm">{item.name}</p>
+                                <p className="text-xs text-muted-foreground">{item.unit_type}</p>
+                              </div>
+                            </div>
                           </TableCell>
                           <TableCell>
-                            <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                              {item.unit_type}
+                            <span className={`font-bold text-sm ${item.quantity === 0 ? 'text-destructive' : item.quantity < 10 ? 'text-warning' : 'text-foreground'}`}>
+                              {item.quantity} {item.unit_type}
+                            </span>
+                          </TableCell>
+                          <TableCell className="font-semibold text-sm">₹{item.price.toFixed(2)}</TableCell>
+                          <TableCell>
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${status.color}`}>
+                              {item.quantity === 0 ? <XCircle className="h-3 w-3" /> : item.quantity < 10 ? <AlertTriangle className="h-3 w-3" /> : <CheckCircle2 className="h-3 w-3" />}
+                              {status.label}
                             </span>
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={() => openEditDialog(item)}
-                                className="hover:bg-primary/10 hover:text-primary"
-                              >
-                                <Pencil className="h-4 w-4" />
+                              <Button variant="ghost" size="icon" onClick={() => openEditDialog(item)} className="hover:bg-primary/10 hover:text-primary h-8 w-8">
+                                <Pencil className="h-3.5 w-3.5" />
                               </Button>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="hover:bg-destructive/10 hover:text-destructive"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                  <Button variant="ghost" size="icon" className="hover:bg-destructive/10 hover:text-destructive h-8 w-8"><Trash2 className="h-3.5 w-3.5" /></Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
                                     <AlertDialogTitle>Delete Stock Item</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to delete "{item.name}"? This action cannot be undone.
-                                    </AlertDialogDescription>
+                                    <AlertDialogDescription>Are you sure you want to delete "{item.name}"? This action cannot be undone.</AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>No, Cancel</AlertDialogCancel>
-                                    <AlertDialogAction 
-                                      onClick={() => handleDelete(item.id)}
-                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    >
-                                      Yes, Delete
-                                    </AlertDialogAction>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDelete(item.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
                               </AlertDialog>
                             </div>
                           </TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              );
-            })()}
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
+
+        {filteredItems.length > 0 && (
+          <p className="text-xs text-muted-foreground animate-fade-in">
+            Showing <span className="font-semibold text-foreground">1</span> to <span className="font-semibold text-foreground">{filteredItems.length}</span> of <span className="font-semibold text-primary">{items.length}</span> products
+          </p>
+        )}
       </div>
     </AppLayout>
   );

@@ -186,11 +186,11 @@ const Settings = () => {
 
   return (
     <AppLayout title="Settings" subtitle="Manage your preferences">
-      <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
-        <div className="space-y-3">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-3xl">
+        <div className="space-y-4">
           {/* Business Profile Section */}
           <Collapsible open={openSection === "profile"} onOpenChange={() => toggleSection("profile")}>
-            <Card className="shadow-card border border-border overflow-hidden animate-fade-in opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
+            <Card className="shadow-3d border border-border overflow-hidden animate-fade-in opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
               <CollapsibleTrigger className="w-full">
                 <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer">
                   <div className="flex items-center gap-4">
@@ -242,12 +242,7 @@ const Settings = () => {
                     />
                   </div>
 
-                  <Button 
-                    onClick={() => handleSave()}
-                    disabled={saving}
-                    variant="gradient"
-                    className="w-full"
-                  >
+                  <Button onClick={() => handleSave()} disabled={saving} className="w-full h-11 btn-3d">
                     <Save className="mr-2 h-4 w-4" />
                     {saving ? "Saving..." : "Save Profile"}
                   </Button>

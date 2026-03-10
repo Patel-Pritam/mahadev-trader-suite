@@ -433,62 +433,50 @@ const Invoices = () => {
   };
 
   return (
-    <AppLayout title="Invoices & Quotations" subtitle="Manage billing & payments">
-      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl">
-        <Card className="shadow-card border border-border animate-fade-in">
-          <CardHeader className="space-y-4 pb-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex-1 min-w-0 animate-slide-up opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
-                <CardTitle className="text-xl sm:text-2xl font-semibold">
-                  Documents
-                </CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {invoices.length} documents generated
-                </p>
-              </div>
-            
-              {/* Collapsible Search */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className={`flex items-center transition-all duration-300 overflow-hidden ${
-                  searchOpen ? 'w-full sm:w-64' : 'w-0'
-                }`}>
-                <Input
-                  placeholder="Search invoices..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border-2 focus:border-secondary/50"
-                  autoFocus={searchOpen}
-                />
-              </div>
-              <Button
-                variant={searchOpen ? "default" : "outline"}
-                size="icon"
-                onClick={() => {
-                  setSearchOpen(!searchOpen);
-                  if (searchOpen) setSearchTerm("");
-                }}
-                className={`flex-shrink-0 ${searchOpen ? 'bg-secondary text-secondary-foreground' : ''}`}
-              >
-                <Search className="h-4 w-4" />
-              </Button>
+    <AppLayout
+      title="Invoice Management"
+      subtitle="Manage, create and track all your outgoing bills"
+      headerActions={
+        <Button onClick={() => navigate("/create-invoice")} className="btn-3d">
+          <Plus className="mr-2 h-4 w-4" />
+          <span className="hidden sm:inline">Create New Invoice</span>
+          <span className="sm:hidden">Create</span>
+        </Button>
+      }
+    >
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl space-y-6">
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: "Total Receivables", value: `₹${invoices.reduce((s, i) => s + i.total_amount, 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, sub: `+12.5% from last month`, color: "text-foreground", subColor: "text-success" },
+            { label: "Paid Invoices", value: invoices.filter(i => i.payment_type !== 'Pending').length.toString(), sub: `₹${invoices.filter(i => i.payment_type !== 'Pending').reduce((s, i) => s + i.total_amount, 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })} total`, color: "text-success", subColor: "text-success" },
+            { label: "Pending", value: invoices.filter(i => i.payment_type === 'Pending').length.toString(), sub: `₹${invoices.filter(i => i.payment_type === 'Pending').reduce((s, i) => s + i.total_amount, 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })} awaiting`, color: "text-warning", subColor: "text-warning" },
+            { label: "Total Invoices", value: invoices.length.toString(), sub: `${invoices.length} documents`, color: "text-primary", subColor: "text-muted-foreground" },
+          ].map((s, i) => (
+            <Card key={s.label} className="card-3d-subtle opacity-0 animate-stagger-in" style={{ animationDelay: `${i * 0.06}s`, animationFillMode: 'forwards' }}>
+              <CardContent className="p-4">
+                <p className="text-xs font-medium text-muted-foreground">{s.label}</p>
+                <p className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</p>
+                <p className={`text-xs mt-1 ${s.subColor}`}>{s.sub}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-              <Button 
-                onClick={() => navigate("/create-invoice")}
-                variant="gradient"
-                className="shadow-elegant flex-shrink-0"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Create Invoice</span>
-                <span className="sm:hidden">Create</span>
-              </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
+        {/* Search */}
+        <div className="flex items-center gap-3 animate-fade-in">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search invoices..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 h-11 bg-card border-border" />
+          </div>
+        </div>
+
+        <Card className="shadow-3d border border-border animate-fade-in">
+          <CardContent className="p-0">
             {loading ? (
-              <div className="text-center py-12">
-                <div className="inline-block w-12 h-12 rounded-full border-4 border-secondary/20 border-t-secondary animate-spin"></div>
-                <p className="text-muted-foreground mt-4">Loading invoices...</p>
+              <div className="text-center py-16">
+                <div className="inline-block w-10 h-10 rounded-full border-3 border-primary/20 border-t-primary animate-spin"></div>
+                <p className="text-muted-foreground mt-4 text-sm">Loading invoices...</p>
               </div>
             ) : (() => {
               const filteredInvoices = invoices.filter((invoice, _, arr) => {
@@ -534,18 +522,16 @@ const Invoices = () => {
                   )}
                 </div>
               ) : (
-                <div className="rounded-xl border-2 border-border/50 overflow-x-auto">
+                <div className="overflow-x-auto">
                   <Table className="min-w-[700px]">
                     <TableHeader>
-                      <TableRow className="bg-muted/30 hover:bg-muted/50">
-                        <TableHead className="font-bold">Inv No.</TableHead>
-                        <TableHead className="font-bold">Date</TableHead>
-                        <TableHead className="font-bold">Type</TableHead>
-                        <TableHead className="font-bold">Customer</TableHead>
-                        <TableHead className="font-bold">Mobile</TableHead>
-                        <TableHead className="font-bold">Payment</TableHead>
-                        <TableHead className="text-right font-bold">Amount</TableHead>
-                        <TableHead className="text-right font-bold">Actions</TableHead>
+                      <TableRow className="bg-muted/30 hover:bg-muted/40 border-b border-border">
+                         <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">Invoice #</TableHead>
+                         <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">Customer</TableHead>
+                         <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">Date</TableHead>
+                         <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">Amount</TableHead>
+                         <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                         <TableHead className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -557,8 +543,8 @@ const Invoices = () => {
                         return (
                         <TableRow 
                           key={invoice.id}
-                          className="hover:bg-secondary/5 transition-colors animate-fade-in"
-                          style={{ animationDelay: `${index * 0.05}s` }}
+                          className="hover:bg-muted/30 transition-colors border-b border-border/50 animate-fade-in"
+                          style={{ animationDelay: `${index * 0.03}s` }}
                         >
                           <TableCell className="font-mono font-semibold text-primary">
                             #{invoiceNumber}
