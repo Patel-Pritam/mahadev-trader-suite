@@ -543,8 +543,8 @@ const Invoices = () => {
                         return (
                         <TableRow 
                           key={invoice.id}
-                          className="hover:bg-secondary/5 transition-colors animate-fade-in"
-                          style={{ animationDelay: `${index * 0.05}s` }}
+                          className="hover:bg-muted/30 transition-colors border-b border-border/50 animate-fade-in"
+                          style={{ animationDelay: `${index * 0.03}s` }}
                         >
                           <TableCell className="font-mono font-semibold text-primary">
                             #{invoiceNumber}
