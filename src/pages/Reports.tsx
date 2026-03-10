@@ -359,7 +359,7 @@ const Reports = () => {
             </CardContent>
           </Card>
 
-          <Card className="shadow-card hover-lift opacity-0 animate-stagger-in" style={{ animationDelay: '0.25s', animationFillMode: 'forwards' }}>
+          <Card className="card-3d-subtle hover-lift opacity-0 animate-stagger-in" style={{ animationDelay: '0.25s', animationFillMode: 'forwards' }}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Pending</CardTitle>
               <Clock className="h-4 w-4 text-destructive" />
