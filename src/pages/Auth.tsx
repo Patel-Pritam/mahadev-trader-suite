@@ -4,11 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Store } from "lucide-react";
+import { Store, Mail, Lock, Eye, EyeOff, Building2, ArrowRight, CheckCircle2 } from "lucide-react";
 import { z } from "zod";
 
 const passwordSchema = z.string()
@@ -28,6 +26,9 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [businessName, setBusinessName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -98,6 +99,7 @@ const Auth = () => {
     setPassword("");
     setConfirmPassword("");
     setBusinessName("");
+    setIsSignUp(false);
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -114,99 +116,203 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl animate-float" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-primary/3 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }} />
-      </div>
-
-      <div className="absolute top-4 right-4 z-10">
-        <ThemeToggle />
-      </div>
-      
-      <Card className="w-full max-w-md shadow-card border border-border animate-scale-in relative">
-        <CardHeader className="text-center space-y-3">
-          <div className="flex justify-center mb-2">
-            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-lg-custom animate-bounce-in hover-scale">
-              <Store className="w-8 h-8 text-primary-foreground" />
-            </div>
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Top Navigation Bar */}
+      <header className="h-16 border-b border-border bg-card flex items-center justify-between px-6 animate-fade-in">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shadow-md">
+            <Store className="w-5 h-5 text-primary-foreground" />
           </div>
-          <CardTitle className="text-3xl font-bold text-gradient animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            Business Manager
-          </CardTitle>
-          <CardDescription className="text-base animate-fade-in opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
-            Modern Business Management
-          </CardDescription>
-        </CardHeader>
+          <span className="text-lg font-bold tracking-tight">Mahadev Trader</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground hidden sm:block">
+            {isSignUp ? "Already have an account?" : "Don't have an account?"}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setEmail("");
+              setPassword("");
+              setConfirmPassword("");
+              setBusinessName("");
+            }}
+            className="font-medium"
+          >
+            {isSignUp ? "Sign In" : "Get Started"}
+          </Button>
+          <ThemeToggle />
+        </div>
+      </header>
 
-        <CardContent className="animate-fade-in opacity-0" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 p-1">
-              <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200">
-                Login
-              </TabsTrigger>
-              <TabsTrigger value="signup" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200">
-                Sign Up
-              </TabsTrigger>
-            </TabsList>
+      {/* Main Content */}
+      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 right-[10%] w-72 h-72 bg-primary/[0.03] rounded-full blur-3xl float-slow" />
+          <div className="absolute bottom-20 left-[10%] w-96 h-96 bg-primary/[0.02] rounded-full blur-3xl float-slow" style={{ animationDelay: '3s' }} />
+        </div>
 
-            <TabsContent value="login" className="animate-fade-in">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
-                  <Input id="login-email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="transition-all duration-200 focus:ring-2 focus:ring-primary/20" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
-                  <Input id="login-password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="transition-all duration-200 focus:ring-2 focus:ring-primary/20" />
-                </div>
-                <Button type="submit" className="w-full hover-glow" disabled={loading}>
-                  {loading ? "Logging in..." : "Login"}
-                </Button>
-              </form>
-            </TabsContent>
+        <div className="w-full max-w-md relative z-10">
+          {/* Title above card */}
+          {isSignUp && (
+            <div className="text-center mb-8 animate-fade-in">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Create your account</h1>
+              <p className="text-muted-foreground mt-2 text-base">Join businesses managing growth effectively.</p>
+            </div>
+          )}
 
-            <TabsContent value="signup" className="animate-fade-in">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="business-name">Business Name</Label>
-                  <Input id="business-name" type="text" placeholder="Your Business Name" value={businessName} onChange={(e) => setBusinessName(e.target.value)} required className="transition-all duration-200 focus:ring-2 focus:ring-primary/20" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input id="signup-email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="transition-all duration-200 focus:ring-2 focus:ring-primary/20" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input id="signup-password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="transition-all duration-200 focus:ring-2 focus:ring-primary/20" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm Password</Label>
-                  <Input id="confirm-password" type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="transition-all duration-200 focus:ring-2 focus:ring-primary/20" />
-                </div>
-                <div className="p-3 bg-muted rounded-lg border border-border">
-                  <p className="text-xs text-muted-foreground mb-1 font-medium">Password Requirements:</p>
-                  <ul className="text-xs text-muted-foreground space-y-0.5 list-disc list-inside">
-                    <li>At least 8 characters long</li>
-                    <li>One uppercase & one lowercase letter</li>
-                    <li>One number & one special character</li>
-                  </ul>
-                </div>
-                <Button type="submit" className="w-full hover-glow" disabled={loading}>
-                  {loading ? "Creating account..." : "Create Account"}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
+          {/* Card */}
+          <div className="bg-card rounded-2xl border border-border shadow-3d p-8 sm:p-10 card-3d-subtle animate-scale-in">
+            {!isSignUp && (
+              <div className="mb-8">
+                <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+                <p className="text-muted-foreground mt-1">Please enter your details to access your dashboard.</p>
+              </div>
+            )}
 
-        <CardFooter className="text-center animate-fade-in opacity-0" style={{ animationDelay: '0.5s', animationFillMode: 'forwards' }}>
-          <p className="text-sm text-muted-foreground">
-            🔒 Secure business management for small businesses
+            <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-5">
+              {isSignUp && (
+                <div className="space-y-2 animate-fade-in">
+                  <Label htmlFor="business-name" className="text-sm font-semibold">Business Name</Label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="business-name"
+                      type="text"
+                      placeholder="Acme Corp"
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      required
+                      className="pl-10 h-11 bg-muted/50 border-border focus:bg-card transition-colors"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-semibold">Email Address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="alex@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="pl-10 h-11 bg-muted/50 border-border focus:bg-card transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-sm font-semibold">Password</Label>
+                  {!isSignUp && (
+                    <button type="button" className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="pl-10 pr-10 h-11 bg-muted/50 border-border focus:bg-card transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {isSignUp && (
+                  <p className="text-xs text-muted-foreground">Must be at least 8 characters long.</p>
+                )}
+              </div>
+
+              {isSignUp && (
+                <div className="space-y-2 animate-fade-in">
+                  <Label htmlFor="confirm-password" className="text-sm font-semibold">Confirm Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="confirm-password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      className="pl-10 pr-10 h-11 bg-muted/50 border-border focus:bg-card transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full h-12 text-base font-semibold btn-3d group"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="h-5 w-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                ) : (
+                  <>
+                    {isSignUp ? "Create Account" : "Log In"}
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </>
+                )}
+              </Button>
+            </form>
+
+            {!isSignUp && (
+              <p className="text-center text-sm text-muted-foreground mt-6">
+                Don't have an account?{" "}
+                <button
+                  onClick={() => setIsSignUp(true)}
+                  className="text-primary font-semibold hover:text-primary/80 transition-colors"
+                >
+                  Sign Up
+                </button>
+              </p>
+            )}
+
+            {isSignUp && (
+              <p className="text-center text-sm text-muted-foreground mt-6">
+                Already have an account?{" "}
+                <button
+                  onClick={() => setIsSignUp(false)}
+                  className="text-primary font-semibold hover:text-primary/80 transition-colors"
+                >
+                  Sign In
+                </button>
+              </p>
+            )}
+          </div>
+
+          {/* Footer */}
+          <p className="text-center text-xs text-muted-foreground mt-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            © {new Date().getFullYear()} Mahadev Trader. All rights reserved.
           </p>
-        </CardFooter>
-      </Card>
+        </div>
+      </main>
     </div>
   );
 };

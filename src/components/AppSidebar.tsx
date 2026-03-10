@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, FileText, Users, BarChart3, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, FileText, Users, BarChart3, Settings, LogOut, Store } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
+  SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -42,12 +43,31 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
-      <SidebarContent className="pt-4">
+      {/* Logo */}
+      <SidebarHeader className="p-4 border-b border-sidebar-border">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shadow-md shrink-0">
+            <Store className="w-5 h-5 text-primary-foreground" />
+          </div>
+          {!collapsed && (
+            <div className="min-w-0 animate-fade-in">
+              <p className="text-sm font-bold tracking-tight truncate">Mahadev Trader</p>
+              <p className="text-[10px] text-muted-foreground truncate">Business Suite</p>
+            </div>
+          )}
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent className="pt-2">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item, index) => (
-                <SidebarMenuItem key={item.title} className="animate-stagger-in opacity-0" style={{ animationDelay: `${index * 0.05}s`, animationFillMode: 'forwards' }}>
+                <SidebarMenuItem
+                  key={item.title}
+                  className="animate-stagger-in opacity-0"
+                  style={{ animationDelay: `${index * 0.05}s`, animationFillMode: 'forwards' }}
+                >
                   <SidebarMenuButton
                     asChild
                     isActive={isActive(item.url)}
@@ -56,10 +76,14 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200"
-                      activeClassName="bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        isActive(item.url)
+                          ? 'bg-primary text-primary-foreground shadow-md'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                      }`}
+                      activeClassName=""
                     >
-                      <item.icon className="h-[18px] w-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110" />
+                      <item.icon className="h-[18px] w-[18px] shrink-0" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -70,7 +94,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 animate-fade-in">
+      <SidebarFooter className="p-3 border-t border-sidebar-border">
         <Button
           variant="ghost"
           size={collapsed ? "icon" : "default"}
