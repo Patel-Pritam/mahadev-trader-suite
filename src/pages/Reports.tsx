@@ -314,7 +314,7 @@ const Reports = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="shadow-card hover-lift opacity-0 animate-stagger-in" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
+          <Card className="card-3d-subtle hover-lift opacity-0 animate-stagger-in" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
               <DollarSign className="h-4 w-4 text-primary" />
