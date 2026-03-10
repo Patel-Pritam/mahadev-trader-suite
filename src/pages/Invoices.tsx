@@ -472,11 +472,11 @@ const Invoices = () => {
         </div>
 
         <Card className="shadow-3d border border-border animate-fade-in">
-          <CardContent>
+          <CardContent className="p-0">
             {loading ? (
-              <div className="text-center py-12">
-                <div className="inline-block w-12 h-12 rounded-full border-4 border-secondary/20 border-t-secondary animate-spin"></div>
-                <p className="text-muted-foreground mt-4">Loading invoices...</p>
+              <div className="text-center py-16">
+                <div className="inline-block w-10 h-10 rounded-full border-3 border-primary/20 border-t-primary animate-spin"></div>
+                <p className="text-muted-foreground mt-4 text-sm">Loading invoices...</p>
               </div>
             ) : (() => {
               const filteredInvoices = invoices.filter((invoice, _, arr) => {
