@@ -420,7 +420,7 @@ const Reports = () => {
         </Card>
 
         {/* Invoices Table */}
-        <Card className="shadow-card border-2 border-secondary/10">
+        <Card className="shadow-3d border border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />

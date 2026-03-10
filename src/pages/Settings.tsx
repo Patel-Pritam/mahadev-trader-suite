@@ -242,12 +242,7 @@ const Settings = () => {
                     />
                   </div>
 
-                  <Button 
-                    onClick={() => handleSave()}
-                    disabled={saving}
-                    variant="gradient"
-                    className="w-full"
-                  >
+                  <Button onClick={() => handleSave()} disabled={saving} className="w-full h-11 btn-3d">
                     <Save className="mr-2 h-4 w-4" />
                     {saving ? "Saving..." : "Save Profile"}
                   </Button>
