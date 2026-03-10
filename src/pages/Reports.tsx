@@ -257,7 +257,7 @@ const Reports = () => {
     <AppLayout title="Reports" subtitle="Sales analytics & reports">
       <div className="p-4 sm:p-6 lg:p-8 max-w-6xl space-y-6">
         {/* Date Range Picker */}
-        <Card className="shadow-card border border-border animate-fade-in">
+        <Card className="shadow-3d border border-border animate-fade-in">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg flex items-center gap-2">
               <CalendarIcon className="h-5 w-5 text-primary" />
