@@ -186,8 +186,8 @@ const Settings = () => {
 
   return (
     <AppLayout title="Settings" subtitle="Manage your preferences">
-      <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
-        <div className="space-y-3">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-3xl">
+        <div className="space-y-4">
           {/* Business Profile Section */}
           <Collapsible open={openSection === "profile"} onOpenChange={() => toggleSection("profile")}>
             <Card className="shadow-card border border-border overflow-hidden animate-fade-in opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
