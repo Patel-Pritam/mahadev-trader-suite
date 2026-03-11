@@ -162,7 +162,7 @@
   }
 
   .card-3d-subtle {
-    @apply transition-all duration-400 ease-out;
+    @apply transition-all duration-300 ease-out;
     transform: perspective(800px) rotateX(0deg) rotateY(0deg);
     transform-style: preserve-3d;
   }
