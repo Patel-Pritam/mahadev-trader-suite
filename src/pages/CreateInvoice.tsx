@@ -9,8 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AppLayout } from "@/components/AppLayout";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Save, FileText, FileCheck } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Trash2, Save, ArrowLeft, FileText, User, CalendarIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -58,7 +57,7 @@ const CreateInvoice = () => {
   const [newCustomerMode, setNewCustomerMode] = useState(false);
   const [newCustomerName, setNewCustomerName] = useState("");
   const [newCustomerMobile, setNewCustomerMobile] = useState("");
-  const [paymentType, setPaymentType] = useState<"Online" | "Cash" | "Pending">("Cash");
+  const [paymentType, setPaymentType] = useState<"Online" | "Cash" | "Pending">("Pending");
   const [documentType, setDocumentType] = useState<"Invoice" | "Quotation">("Invoice");
   const [includeGst, setIncludeGst] = useState(false);
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
@@ -67,95 +66,54 @@ const CreateInvoice = () => {
   const [customerAddress, setCustomerAddress] = useState("");
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<{ gst_number?: string; business_address?: string } | null>(null);
+  const [invoiceDate, setInvoiceDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [discount, setDiscount] = useState(0);
+  const [notes, setNotes] = useState("");
+  const [terms, setTerms] = useState("");
 
   useEffect(() => {
     checkAuthAndFetchData();
   }, []);
 
-  // Real-time subscription for stock items
   useEffect(() => {
     const channel = supabase
       .channel('create-invoice-stock-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'stock_items'
-        },
-        () => {
-          fetchStockItems();
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_items' }, () => fetchStockItems())
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const checkAuthAndFetchData = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-      return;
-    }
+    if (!session) { navigate("/auth"); return; }
     fetchCustomers();
     fetchStockItems();
     fetchProfile();
   };
 
   const fetchCustomers = async () => {
-    const { data, error } = await supabase
-      .from("customers")
-      .select("*")
-      .order("name");
-
-    if (!error && data) {
-      setCustomers(data);
-    }
+    const { data, error } = await supabase.from("customers").select("*").order("name");
+    if (!error && data) setCustomers(data);
   };
 
   const fetchStockItems = async () => {
-    const { data, error } = await supabase
-      .from("stock_items")
-      .select("*")
-      .order("name");
-
-    if (!error && data) {
-      setStockItems(data);
-    }
+    const { data, error } = await supabase.from("stock_items").select("*").order("name");
+    if (!error && data) setStockItems(data);
   };
 
   const fetchProfile = async () => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("gst_number, business_address")
-      .single();
-
-    if (!error && data) {
-      setProfile(data);
-    }
+    const { data, error } = await supabase.from("profiles").select("gst_number, business_address").single();
+    if (!error && data) setProfile(data);
   };
 
   const addItemToInvoice = (item: StockItem) => {
-    const existing = invoiceItems.find(i => i.stock_item_id === item.id);
-    if (existing) {
-      toast({
-        title: "Already added",
-        description: "This item is already in the invoice",
-        variant: "destructive"
-      });
+    if (invoiceItems.find(i => i.stock_item_id === item.id)) {
+      toast({ title: "Already added", description: "This item is already in the invoice", variant: "destructive" });
       return;
     }
-
     setInvoiceItems([...invoiceItems, {
-      stock_item_id: item.id,
-      item_name: item.name,
-      price: item.price,
-      quantity: 1,
-      unit_type: item.unit_type,
-      available_quantity: item.quantity
+      stock_item_id: item.id, item_name: item.name, price: item.price,
+      quantity: 1, unit_type: item.unit_type, available_quantity: item.quantity
     }]);
     setShowItemDialog(false);
     setSearchTerm("");
@@ -163,22 +121,9 @@ const CreateInvoice = () => {
 
   const updateItemQuantity = (index: number, quantity: number) => {
     const newItems = [...invoiceItems];
-    
-    if (quantity <= 0) {
-      toast({
-        title: "Validation Error",
-        description: "Quantity must be positive",
-        variant: "destructive"
-      });
-      return;
-    }
-    
+    if (quantity <= 0) { toast({ title: "Validation Error", description: "Quantity must be positive", variant: "destructive" }); return; }
     if (quantity > newItems[index].available_quantity) {
-      toast({
-        title: "Insufficient stock",
-        description: `Only ${newItems[index].available_quantity} ${newItems[index].unit_type} available`,
-        variant: "destructive"
-      });
+      toast({ title: "Insufficient stock", description: `Only ${newItems[index].available_quantity} ${newItems[index].unit_type} available`, variant: "destructive" });
       return;
     }
     newItems[index].quantity = quantity;
@@ -187,444 +132,340 @@ const CreateInvoice = () => {
 
   const updateItemPrice = (index: number, price: number) => {
     const newItems = [...invoiceItems];
-    
-    if (price <= 0) {
-      toast({
-        title: "Validation Error",
-        description: "Price must be positive",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (price > 999999.99) {
-      toast({
-        title: "Validation Error",
-        description: "Price must be less than 1,000,000",
-        variant: "destructive"
-      });
-      return;
-    }
-    
+    if (price <= 0) { toast({ title: "Validation Error", description: "Price must be positive", variant: "destructive" }); return; }
+    if (price > 999999.99) { toast({ title: "Validation Error", description: "Price must be less than 1,000,000", variant: "destructive" }); return; }
     newItems[index].price = price;
     setInvoiceItems(newItems);
   };
 
-  const removeItem = (index: number) => {
-    setInvoiceItems(invoiceItems.filter((_, i) => i !== index));
-  };
+  const removeItem = (index: number) => setInvoiceItems(invoiceItems.filter((_, i) => i !== index));
 
-  const calculateTotal = () => {
-    return invoiceItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  };
+  const subtotal = invoiceItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const discountAmount = subtotal * (discount / 100);
+  const taxAmount = includeGst ? (subtotal - discountAmount) * 0.18 : 0;
+  const grandTotal = subtotal - discountAmount + taxAmount;
 
   const handleSaveInvoice = async () => {
     if (!selectedCustomer && !newCustomerMode) {
-      toast({
-        title: "Customer required",
-        description: "Please select or add a customer",
-        variant: "destructive"
-      });
-      return;
+      toast({ title: "Customer required", description: "Please select or add a customer", variant: "destructive" }); return;
     }
-
     if (invoiceItems.length === 0) {
-      toast({
-        title: "No items",
-        description: "Please add at least one item to the invoice",
-        variant: "destructive"
-      });
-      return;
+      toast({ title: "No items", description: "Please add at least one item", variant: "destructive" }); return;
     }
 
-    // Validate all invoice items
     for (const item of invoiceItems) {
       try {
-        invoiceItemSchema.parse({
-          quantity: item.quantity,
-          price: item.price
-        });
-        
+        invoiceItemSchema.parse({ quantity: item.quantity, price: item.price });
         if (item.quantity > item.available_quantity) {
-          toast({
-            title: "Validation Error",
-            description: `${item.item_name}: Cannot exceed available stock (${item.available_quantity} ${item.unit_type})`,
-            variant: "destructive"
-          });
-          return;
+          toast({ title: "Validation Error", description: `${item.item_name}: Cannot exceed available stock (${item.available_quantity} ${item.unit_type})`, variant: "destructive" }); return;
         }
       } catch (error) {
         if (error instanceof z.ZodError) {
-          toast({
-            title: "Validation Error",
-            description: `${item.item_name}: ${error.errors[0].message}`,
-            variant: "destructive"
-          });
-          return;
+          toast({ title: "Validation Error", description: `${item.item_name}: ${error.errors[0].message}`, variant: "destructive" }); return;
         }
       }
     }
 
-    let customerName = "";
-    let customerMobile = "";
-    let customerId: string | undefined = undefined;
+    let customerName = "", customerMobile = "";
+    let customerId: string | undefined;
 
-    // Validate customer data
     if (newCustomerMode) {
       try {
-        const validatedCustomer = newCustomerSchema.parse({
-          name: newCustomerName,
-          mobile: newCustomerMobile
-        });
-        customerName = validatedCustomer.name;
-        customerMobile = validatedCustomer.mobile;
+        const v = newCustomerSchema.parse({ name: newCustomerName, mobile: newCustomerMobile });
+        customerName = v.name; customerMobile = v.mobile;
       } catch (error) {
         if (error instanceof z.ZodError) {
-          toast({
-            title: "Validation Error",
-            description: error.errors[0].message,
-            variant: "destructive"
-          });
-          return;
+          toast({ title: "Validation Error", description: error.errors[0].message, variant: "destructive" }); return;
         }
       }
     } else {
-      if (!selectedCustomer) {
-        toast({
-          title: "Error",
-          description: "Please select a customer",
-          variant: "destructive"
-        });
-        return;
-      }
+      if (!selectedCustomer) { toast({ title: "Error", description: "Please select a customer", variant: "destructive" }); return; }
       customerName = selectedCustomer.name;
       customerMobile = selectedCustomer.mobile_number;
       customerId = selectedCustomer.id;
     }
 
     setSaving(true);
-
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Create new customer if needed
       if (newCustomerMode) {
         const { data: newCustomer, error: customerError } = await supabase
-          .from("customers")
-          .insert([{
-            name: customerName,
-            mobile_number: customerMobile,
-            user_id: user.id
-          }])
-          .select()
-          .single();
-
+          .from("customers").insert([{ name: customerName, mobile_number: customerMobile, user_id: user.id }]).select().single();
         if (customerError) throw customerError;
         customerId = newCustomer.id;
       }
 
-      // Create invoice/quotation (customer details stored in customers table, not duplicated here)
       const { data: invoice, error: invoiceError } = await supabase
-        .from("invoices")
-        .insert([{
-          user_id: user.id,
-          customer_id: customerId,
-          payment_type: paymentType,
-          document_type: documentType,
-          include_gst: includeGst,
-          total_amount: calculateTotal(),
-          customer_address: customerAddress.trim() || null
-        }])
-        .select()
-        .single();
-
+        .from("invoices").insert([{
+          user_id: user.id, customer_id: customerId, payment_type: paymentType,
+          document_type: documentType, include_gst: includeGst,
+          total_amount: grandTotal, customer_address: customerAddress.trim() || null
+        }]).select().single();
       if (invoiceError) throw invoiceError;
 
-      // Create invoice items and update stock
       for (const item of invoiceItems) {
-        // Insert invoice item
         const { error: itemError } = await supabase
-          .from("invoice_items")
-          .insert([{
-            invoice_id: invoice.id,
-            stock_item_id: item.stock_item_id,
-            item_name: item.item_name,
-            price: item.price,
-            quantity: item.quantity,
-            unit_type: item.unit_type,
-            subtotal: item.price * item.quantity
+          .from("invoice_items").insert([{
+            invoice_id: invoice.id, stock_item_id: item.stock_item_id, item_name: item.item_name,
+            price: item.price, quantity: item.quantity, unit_type: item.unit_type, subtotal: item.price * item.quantity
           }]);
-
         if (itemError) throw itemError;
 
-        // Update stock quantity atomically to prevent race conditions (only for Invoices, not Quotations)
         if (documentType === "Invoice") {
-          const { error: stockError } = await supabase.rpc('decrement_stock', {
-            _stock_item_id: item.stock_item_id,
-            _quantity: item.quantity
-          });
-
+          const { error: stockError } = await supabase.rpc('decrement_stock', { _stock_item_id: item.stock_item_id, _quantity: item.quantity });
           if (stockError) throw stockError;
         }
       }
 
-      toast({
-        title: "Success!",
-        description: `${documentType} created successfully`
-      });
-
+      toast({ title: "Success!", description: `${documentType} created successfully` });
       navigate("/invoices");
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create invoice",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: error.message || "Failed to create invoice", variant: "destructive" });
     } finally {
       setSaving(false);
     }
   };
 
   const filteredStockItems = stockItems.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    item.quantity > 0
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()) && item.quantity > 0
   );
 
   return (
     <AppLayout title={`Create ${documentType}`} subtitle="New billing document">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
+        {/* Back Link */}
+        <button onClick={() => navigate("/invoices")} className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 mb-2 transition-colors">
+          <ArrowLeft className="h-4 w-4" />
+          BACK TO INVOICES
+        </button>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1">Create New {documentType}</h1>
+        <p className="text-muted-foreground mb-8">Generate a professional {documentType.toLowerCase()} for your client in seconds.</p>
 
-      {/* Document Type Selection */}
-      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
-        <Tabs value={documentType} onValueChange={(value) => setDocumentType(value as "Invoice" | "Quotation")} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="Invoice" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Invoice
-            </TabsTrigger>
-            <TabsTrigger value="Quotation" className="flex items-center gap-2">
-              <FileCheck className="h-4 w-4" />
-              Quotation
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-        {documentType === "Quotation" && (
-          <p className="text-sm text-muted-foreground mt-2 text-center">
-            Quotations don't deduct stock. Convert to invoice when confirmed.
-          </p>
-        )}
-      </div>
-
-      <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-4xl">
-        <div className="space-y-6">
-          {/* Customer Selection */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Customer Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-                <Button
-                  variant={!newCustomerMode ? "default" : "outline"}
-                  onClick={() => setNewCustomerMode(false)}
-                  size="sm"
-                >
-                  Select Existing
-                </Button>
-                <Button
-                  variant={newCustomerMode ? "default" : "outline"}
-                  onClick={() => setNewCustomerMode(true)}
-                  size="sm"
-                >
-                  Add New
-                </Button>
-              </div>
-
-              {!newCustomerMode ? (
-                <div className="space-y-2">
-                  <Label>Select Customer</Label>
-                  <Select
-                    value={selectedCustomer?.id}
-                    onValueChange={(value) => {
-                      const customer = customers.find(c => c.id === value);
-                      setSelectedCustomer(customer || null);
-                    }}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Customer Info + Invoice Details Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Customer Information */}
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <User className="h-4 w-4 text-primary" />
+                    Customer Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground">Select Customer</Label>
+                    {!newCustomerMode ? (
+                      <Select value={selectedCustomer?.id} onValueChange={(value) => setSelectedCustomer(customers.find(c => c.id === value) || null)}>
+                        <SelectTrigger><SelectValue placeholder="Search or select a customer" /></SelectTrigger>
+                        <SelectContent>
+                          {customers.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>{c.name} - {c.mobile_number}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="space-y-2">
+                        <Input value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} placeholder="Customer name" />
+                        <Input type="tel" value={newCustomerMobile} onChange={(e) => setNewCustomerMobile(e.target.value)} placeholder="Mobile number" />
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setNewCustomerMode(!newCustomerMode)}
+                    className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose a customer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.name} - {customer.mobile_number}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="customer-name">Customer Name</Label>
-                    <Input
-                      id="customer-name"
-                      value={newCustomerName}
-                      onChange={(e) => setNewCustomerName(e.target.value)}
-                      placeholder="Enter customer name"
-                    />
+                    <Plus className="h-3.5 w-3.5" />
+                    {newCustomerMode ? "Select Existing" : "Add New Customer"}
+                  </button>
+
+                  {/* Address */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground">Address <span className="opacity-60">(Optional)</span></Label>
+                    <Textarea value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder="Enter customer address" rows={2} className="resize-none text-sm" />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="customer-mobile">Mobile Number</Label>
-                    <Input
-                      id="customer-mobile"
-                      type="tel"
-                      value={newCustomerMobile}
-                      onChange={(e) => setNewCustomerMobile(e.target.value)}
-                      placeholder="Enter mobile number"
-                    />
-                  </div>
-                </div>
-              )}
+                </CardContent>
+              </Card>
 
-              <div className="space-y-2">
-                <Label htmlFor="customer-address">Address <span className="text-muted-foreground text-xs">(Optional)</span></Label>
-                <Textarea
-                  id="customer-address"
-                  value={customerAddress}
-                  onChange={(e) => setCustomerAddress(e.target.value)}
-                  placeholder="Enter customer address"
-                  rows={2}
-                  className="resize-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Payment Type</Label>
-                <Select
-                  value={paymentType}
-                  onValueChange={(value: any) => setPaymentType(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Cash">Cash</SelectItem>
-                    <SelectItem value="Online">Online</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* GST Toggle - Only show if profile has GST number */}
-              {profile?.gst_number && (
-                <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="include-gst" className="text-base font-medium">Include GST</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Show GST number on this {documentType.toLowerCase()}
-                    </p>
-                  </div>
-                  <Switch
-                    id="include-gst"
-                    checked={includeGst}
-                    onCheckedChange={setIncludeGst}
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Invoice/Quotation Items */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>{documentType} Items</CardTitle>
-              <Button onClick={() => setShowItemDialog(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Item
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {invoiceItems.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No items added yet. Click "Add Item" to start.
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  <div className="overflow-x-auto">
-                  <Table className="min-w-[450px]">
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Item</TableHead>
-                        <TableHead>Price</TableHead>
-                        <TableHead>Qty</TableHead>
-                        <TableHead>Subtotal</TableHead>
-                        <TableHead></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {invoiceItems.map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">
-                            {item.item_name}
-                            <div className="text-xs text-muted-foreground">
-                              Available: {item.available_quantity} {item.unit_type}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={item.price}
-                              onChange={(e) => updateItemPrice(index, parseFloat(e.target.value))}
-                              className="w-20 sm:w-24"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={item.quantity}
-                              onChange={(e) => updateItemQuantity(index, parseFloat(e.target.value))}
-                              className="w-20 sm:w-24"
-                            />
-                          </TableCell>
-                          <TableCell>₹{(item.price * item.quantity).toFixed(2)}</TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeItem(index)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+              {/* Invoice Details */}
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <FileText className="h-4 w-4 text-primary" />
+                    {documentType} Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {/* Document Type */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground">Document Type</Label>
+                    <Select value={documentType} onValueChange={(v) => setDocumentType(v as "Invoice" | "Quotation")}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Invoice">Invoice</SelectItem>
+                        <SelectItem value="Quotation">Quotation</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  <div className="flex justify-end pt-4 border-t">
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Total Amount</p>
-                      <p className="text-3xl font-bold">₹{calculateTotal().toFixed(2)}</p>
+                  {/* Date */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground">Date</Label>
+                    <div className="relative">
+                      <Input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} />
                     </div>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
-          {/* Save Button */}
-          <Button
-            onClick={handleSaveInvoice}
-            disabled={saving}
-            size="lg"
-            className="w-full"
-          >
-            <Save className="mr-2 h-5 w-5" />
-            {saving ? "Saving..." : `Save ${documentType}`}
-          </Button>
+                  {/* Payment Status */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground">Payment Status</Label>
+                    <Select value={paymentType} onValueChange={(v: any) => setPaymentType(v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Cash">Cash</SelectItem>
+                        <SelectItem value="Online">Online</SelectItem>
+                        <SelectItem value="Pending">Pending</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* GST Toggle */}
+                  {profile?.gst_number && (
+                    <div className="flex items-center justify-between pt-1">
+                      <Label htmlFor="include-gst" className="text-sm">Include GST (18%)</Label>
+                      <Switch id="include-gst" checked={includeGst} onCheckedChange={setIncludeGst} />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Items & Services */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-4">
+                <CardTitle className="text-base">Items & Services</CardTitle>
+                <Button onClick={() => setShowItemDialog(true)} size="sm" variant="outline" className="gap-1.5">
+                  <Plus className="h-3.5 w-3.5" />
+                  Add Item
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {invoiceItems.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-10 text-sm">No items added yet. Click "Add Item" to start.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table className="min-w-[500px]">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs uppercase text-muted-foreground font-medium">Description</TableHead>
+                          <TableHead className="text-xs uppercase text-muted-foreground font-medium w-20">Qty</TableHead>
+                          <TableHead className="text-xs uppercase text-muted-foreground font-medium w-28">Unit Price</TableHead>
+                          <TableHead className="text-xs uppercase text-muted-foreground font-medium text-right">Total</TableHead>
+                          <TableHead className="w-10"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {invoiceItems.map((item, index) => (
+                          <TableRow key={index}>
+                            <TableCell>
+                              <span className="font-medium text-sm">{item.item_name}</span>
+                              <span className="block text-xs text-muted-foreground">Avail: {item.available_quantity} {item.unit_type}</span>
+                            </TableCell>
+                            <TableCell>
+                              <Input type="number" step="0.01" value={item.quantity} onChange={(e) => updateItemQuantity(index, parseFloat(e.target.value))} className="w-16 h-8 text-sm" />
+                            </TableCell>
+                            <TableCell>
+                              <Input type="number" step="0.01" value={item.price} onChange={(e) => updateItemPrice(index, parseFloat(e.target.value))} className="w-24 h-8 text-sm" />
+                            </TableCell>
+                            <TableCell className="text-right font-medium text-sm">₹{(item.price * item.quantity).toFixed(2)}</TableCell>
+                            <TableCell>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => removeItem(index)}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Notes & Terms */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-primary" />
+                  Notes & Terms
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">Notes for Customer</Label>
+                  <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add a personal note..." rows={3} className="resize-y text-sm" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">Terms & Conditions</Label>
+                  <Textarea value={terms} onChange={(e) => setTerms(e.target.value)} placeholder="Payment terms, bank details, etc..." rows={3} className="resize-y text-sm" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Summary */}
+          <div className="space-y-6">
+            <Card className="sticky top-6">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg">{documentType} Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="font-medium">₹{subtotal.toFixed(2)}</span>
+                </div>
+
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Discount (%)</span>
+                  <Input type="number" min={0} max={100} value={discount} onChange={(e) => setDiscount(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))} className="w-16 h-8 text-sm text-right" />
+                </div>
+
+                {includeGst && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Tax (18% GST)</span>
+                    <span className="font-medium">₹{taxAmount.toFixed(2)}</span>
+                  </div>
+                )}
+
+                <div className="border-t pt-4 flex justify-between items-center">
+                  <span className="font-semibold text-base">Grand Total</span>
+                  <span className="text-2xl font-bold text-primary">₹{grandTotal.toFixed(2)}</span>
+                </div>
+
+                <Button onClick={handleSaveInvoice} disabled={saving} className="w-full mt-2 gap-2" size="lg">
+                  <Save className="h-4 w-4" />
+                  {saving ? "Saving..." : `Save & Send ${documentType}`}
+                </Button>
+
+                <Button variant="outline" className="w-full" onClick={() => navigate("/invoices")}>
+                  Discard Draft
+                </Button>
+              </CardContent>
+            </Card>
+
+            {documentType === "Quotation" && (
+              <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="p-4">
+                  <p className="text-sm font-medium text-primary mb-1">💡 Pro Tip</p>
+                  <p className="text-xs text-muted-foreground">Quotations don't deduct stock. Convert to invoice when confirmed by the customer.</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </div>
 
@@ -635,34 +476,20 @@ const CreateInvoice = () => {
             <DialogTitle>Select Item from Stock</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input
-              placeholder="Search items..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            <Input placeholder="Search items..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             <div className="max-h-96 overflow-y-auto">
               {filteredStockItems.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  {searchTerm ? "No items found" : "No stock items available"}
-                </p>
+                <p className="text-center text-muted-foreground py-8">{searchTerm ? "No items found" : "No stock items available"}</p>
               ) : (
                 <div className="space-y-2">
                   {filteredStockItems.map((item) => (
-                    <Card
-                      key={item.id}
-                      className="cursor-pointer hover:bg-accent"
-                      onClick={() => addItemToInvoice(item)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="font-medium">{item.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              Available: {item.quantity} {item.unit_type}
-                            </p>
-                          </div>
-                          <p className="text-lg font-bold">₹{item.price.toFixed(2)}</p>
+                    <Card key={item.id} className="cursor-pointer hover:bg-accent transition-colors" onClick={() => addItemToInvoice(item)}>
+                      <CardContent className="p-4 flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">{item.name}</p>
+                          <p className="text-sm text-muted-foreground">Available: {item.quantity} {item.unit_type}</p>
                         </div>
+                        <p className="text-lg font-bold">₹{item.price.toFixed(2)}</p>
                       </CardContent>
                     </Card>
                   ))}
