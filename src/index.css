@@ -154,7 +154,6 @@
   .card-3d {
     @apply transition-all duration-500 ease-out;
     transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
-    transform-style: preserve-3d;
   }
   .card-3d:hover {
     transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) translateY(-4px);
@@ -164,7 +163,6 @@
   .card-3d-subtle {
     @apply transition-all duration-300 ease-out;
     transform: perspective(800px) rotateX(0deg) rotateY(0deg);
-    transform-style: preserve-3d;
   }
   .card-3d-subtle:hover {
     transform: perspective(800px) rotateX(1deg) rotateY(-1deg) translateY(-2px);
