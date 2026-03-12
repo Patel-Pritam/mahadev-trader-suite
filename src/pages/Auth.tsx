@@ -309,6 +309,8 @@ const Auth = () => {
             )}
           </div>
 
+          <ForgotPasswordDialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen} />
+
           {/* Footer */}
           <p className="text-center text-xs text-muted-foreground mt-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
             © {new Date().getFullYear()} Mahadev Trader. All rights reserved.
