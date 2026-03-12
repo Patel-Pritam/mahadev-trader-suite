@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Store, Mail, Lock, Eye, EyeOff, Building2, ArrowRight, CheckCircle2 } from "lucide-react";
 import { z } from "zod";
+import ForgotPasswordDialog from "@/components/ForgotPasswordDialog";
 
 const passwordSchema = z.string()
   .min(8, 'Password must be at least 8 characters')
@@ -29,6 +30,7 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -212,7 +214,7 @@ const Auth = () => {
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-sm font-semibold">Password</Label>
                   {!isSignUp && (
-                    <button type="button" className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">
+                    <button type="button" onClick={() => setForgotPasswordOpen(true)} className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">
                       Forgot password?
                     </button>
                   )}
@@ -306,6 +308,8 @@ const Auth = () => {
               </p>
             )}
           </div>
+
+          <ForgotPasswordDialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen} />
 
           {/* Footer */}
           <p className="text-center text-xs text-muted-foreground mt-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
