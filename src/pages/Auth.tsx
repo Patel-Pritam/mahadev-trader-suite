@@ -214,7 +214,7 @@ const Auth = () => {
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-sm font-semibold">Password</Label>
                   {!isSignUp && (
-                    <button type="button" className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">
+                    <button type="button" onClick={() => setForgotPasswordOpen(true)} className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">
                       Forgot password?
                     </button>
                   )}
