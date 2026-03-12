@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Store, Mail, Lock, Eye, EyeOff, Building2, ArrowRight, CheckCircle2 } from "lucide-react";
 import { z } from "zod";
+import ForgotPasswordDialog from "@/components/ForgotPasswordDialog";
 
 const passwordSchema = z.string()
   .min(8, 'Password must be at least 8 characters')
