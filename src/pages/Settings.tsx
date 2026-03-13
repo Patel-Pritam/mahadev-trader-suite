@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { AppLayout } from "@/components/AppLayout";
-import { Save, Building2, LogOut, Sun, Moon, ChevronRight, Globe, Bell, User, KeyRound, Mail, Shield } from "lucide-react";
+import { Save, Building2, LogOut, Sun, Moon, ChevronRight, Globe, Bell, User as UserIcon, KeyRound, Mail, Shield } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
