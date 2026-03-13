@@ -46,6 +46,8 @@ const Settings = () => {
       navigate("/auth");
       return;
     }
+    setUserEmail(session.user.email || "");
+    setUserCreatedAt(session.user.created_at || "");
     fetchProfile();
   };
 
