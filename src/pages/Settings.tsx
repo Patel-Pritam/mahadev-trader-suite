@@ -29,6 +29,12 @@ const Settings = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(false);
   const [openSection, setOpenSection] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState("");
+  const [userCreatedAt, setUserCreatedAt] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     checkAuthAndFetchProfile();
