@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { AppLayout } from "@/components/AppLayout";
-import { Save, Building2, LogOut, Sun, Moon, ChevronRight, Globe, Bell } from "lucide-react";
+import { Save, Building2, LogOut, Sun, Moon, ChevronRight, Globe, Bell, User as UserIcon, KeyRound, Mail, Shield } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +28,12 @@ const Settings = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(false);
   const [openSection, setOpenSection] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState("");
+  const [userCreatedAt, setUserCreatedAt] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     checkAuthAndFetchProfile();
@@ -39,6 +45,8 @@ const Settings = () => {
       navigate("/auth");
       return;
     }
+    setUserEmail(session.user.email || "");
+    setUserCreatedAt(session.user.created_at || "");
     fetchProfile();
   };
 
@@ -163,11 +171,36 @@ const Settings = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out.",
-    });
+    toast({ title: "Logged out", description: "You have been successfully logged out." });
     navigate("/auth");
+  };
+
+  const handleChangePassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      toast({ title: "Error", description: "Please fill in all password fields", variant: "destructive" });
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast({ title: "Error", description: "Password must be at least 8 characters", variant: "destructive" });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ title: "Error", description: "Passwords do not match", variant: "destructive" });
+      return;
+    }
+
+    setChangingPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setChangingPassword(false);
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Success", description: "Password updated successfully" });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
   };
 
   const toggleSection = (section: string) => {
@@ -188,6 +221,88 @@ const Settings = () => {
     <AppLayout title="Settings" subtitle="Manage your preferences">
       <div className="p-4 sm:p-6 lg:p-8 max-w-3xl">
         <div className="space-y-4">
+          {/* Account & Security Section */}
+          <Collapsible open={openSection === "account"} onOpenChange={() => toggleSection("account")}>
+            <Card className="shadow-3d border border-border overflow-hidden animate-fade-in opacity-0" style={{ animationDelay: '0.05s', animationFillMode: 'forwards' }}>
+              <CollapsibleTrigger className="w-full">
+                <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <UserIcon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-semibold">Account & Security</p>
+                      <p className="text-sm text-muted-foreground">Email, password & account info</p>
+                    </div>
+                  </div>
+                  <ChevronRight className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${openSection === "account" ? "rotate-90" : ""}`} />
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="pt-0 pb-6 space-y-5 border-t border-border/50">
+                  {/* Account Info */}
+                  <div className="pt-4 space-y-3">
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Account Information</p>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+                        <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground">Email Address</p>
+                          <p className="text-sm font-medium truncate">{userEmail}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+                        <Shield className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Member Since</p>
+                          <p className="text-sm font-medium">
+                            {userCreatedAt ? new Date(userCreatedAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) : "—"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Change Password */}
+                  <div className="space-y-3">
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                      <KeyRound className="h-3.5 w-3.5" /> Change Password
+                    </p>
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="new-password">New Password</Label>
+                        <Input
+                          id="new-password"
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Enter new password"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="confirm-password">Confirm New Password</Label>
+                        <Input
+                          id="confirm-password"
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Confirm new password"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Password must be at least 8 characters long
+                      </p>
+                    </div>
+                    <Button onClick={handleChangePassword} disabled={changingPassword} className="w-full h-11 btn-3d">
+                      <KeyRound className="mr-2 h-4 w-4" />
+                      {changingPassword ? "Updating..." : "Update Password"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+
           {/* Business Profile Section */}
           <Collapsible open={openSection === "profile"} onOpenChange={() => toggleSection("profile")}>
             <Card className="shadow-3d border border-border overflow-hidden animate-fade-in opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
