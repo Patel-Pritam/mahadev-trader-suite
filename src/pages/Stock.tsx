@@ -101,46 +101,11 @@ const Stock = () => {
       title="Inventory Management"
       subtitle="Manage products, stock levels, and pricing"
       headerActions={
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { resetForm(); setOpen(true); }} className="btn-3d">
-              <Plus className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Add New Product</span>
-              <span className="sm:hidden">Add</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="border border-border shadow-3d bg-card">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold">{editingItem ? "Edit Item" : "Add New Item"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Item Name</Label>
-                <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required className="h-11" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="price">Price (₹)</Label>
-                <Input id="price" type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} required className="h-11" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="quantity">Quantity</Label>
-                <Input id="quantity" type="number" step="0.01" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} required className="h-11" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="unit_type">Unit Type</Label>
-                <Select value={formData.unit_type} onValueChange={(value) => setFormData({ ...formData, unit_type: value })}>
-                  <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-card border shadow-lg z-50">
-                    <SelectItem value="Kg">Kg (Kilogram)</SelectItem>
-                    <SelectItem value="Qty">Qty (Quantity)</SelectItem>
-                    <SelectItem value="L">L (Litre)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit" className="w-full h-11 btn-3d">{editingItem ? "Update" : "Add"} Item</Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => navigate("/add-product")} className="btn-3d">
+          <Plus className="mr-2 h-4 w-4" />
+          <span className="hidden sm:inline">Add New Product</span>
+          <span className="sm:hidden">Add</span>
+        </Button>
       }
     >
       <div className="p-4 sm:p-6 lg:p-8 max-w-7xl space-y-6">

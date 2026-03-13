@@ -41,6 +41,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/stock" element={<Stock />} />
+              <Route path="/add-product" element={<AddProduct />} />
               <Route path="/invoices" element={<Invoices />} />
               <Route path="/create-invoice" element={<CreateInvoice />} />
               <Route path="/edit-invoice/:id" element={<EditInvoice />} />
