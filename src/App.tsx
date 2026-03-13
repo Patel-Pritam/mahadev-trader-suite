@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Stock from "./pages/Stock";
+import AddProduct from "./pages/AddProduct";
 import Invoices from "./pages/Invoices";
 import CreateInvoice from "./pages/CreateInvoice";
 import EditInvoice from "./pages/EditInvoice";
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/stock" element={<Stock />} />
+              <Route path="/add-product" element={<AddProduct />} />
               <Route path="/invoices" element={<Invoices />} />
               <Route path="/create-invoice" element={<CreateInvoice />} />
               <Route path="/edit-invoice/:id" element={<EditInvoice />} />
