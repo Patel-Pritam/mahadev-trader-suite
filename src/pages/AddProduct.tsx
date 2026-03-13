@@ -171,39 +171,6 @@ const AddProduct = () => {
                     className="h-11"
                   />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="sku">SKU (Stock Keeping Unit)</Label>
-                    <Input
-                      id="sku"
-                      placeholder="e.g. FURN-001"
-                      value={formData.sku}
-                      onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                      className="h-11"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
-                      <SelectTrigger className="h-11"><SelectValue placeholder="Select a category" /></SelectTrigger>
-                      <SelectContent className="bg-card border shadow-lg z-50">
-                        {CATEGORIES.map((c) => (
-                          <SelectItem key={c} value={c}>{c}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Product Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Provide detailed information about the product..."
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="min-h-[120px] resize-y"
-                  />
-                </div>
               </CardContent>
             </Card>
 
