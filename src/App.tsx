@@ -16,6 +16,7 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
+import EditProduct from "./pages/EditProduct";
 
 const queryClient = new QueryClient({
   defaultOptions: {
