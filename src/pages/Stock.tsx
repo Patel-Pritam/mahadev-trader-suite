@@ -190,7 +190,7 @@ const Stock = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
-                              <Button variant="ghost" size="icon" onClick={() => openEditDialog(item)} className="hover:bg-primary/10 hover:text-primary h-8 w-8">
+                              <Button variant="ghost" size="icon" onClick={() => navigate(`/edit-product/${item.id}`)} className="hover:bg-primary/10 hover:text-primary h-8 w-8">
                                 <Pencil className="h-3.5 w-3.5" />
                               </Button>
                               <AlertDialog>
