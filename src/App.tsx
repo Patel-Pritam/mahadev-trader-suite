@@ -43,6 +43,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/stock" element={<Stock />} />
               <Route path="/add-product" element={<AddProduct />} />
+              <Route path="/edit-product/:id" element={<EditProduct />} />
               <Route path="/invoices" element={<Invoices />} />
               <Route path="/create-invoice" element={<CreateInvoice />} />
               <Route path="/edit-invoice/:id" element={<EditInvoice />} />
